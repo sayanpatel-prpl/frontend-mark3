@@ -1,0 +1,95 @@
+@media print {
+  /* Hide landing, nav, and controls */
+  .landing { display: none !important; }
+  .nav-tabs,
+  .report-actions { display: none !important; }
+  .report-footer { display: none !important; }
+
+  /* White background for print */
+  .report-root,
+  .report-container {
+    background: #fff !important;
+    color: #000 !important;
+  }
+
+  .report-container {
+    display: block !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+  }
+
+  /* Show all sections */
+  .section { display: block !important; }
+
+  /* Expand all collapsibles */
+  .collapsible-content {
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  /* Cards: no shadows, visible borders */
+  .card,
+  .collapsible,
+  .threat-card,
+  .advantage-card,
+  .landmine-card,
+  .competitor-attack-card,
+  .damaging-review {
+    box-shadow: none !important;
+    border: 1px solid #ddd !important;
+  }
+
+  /* Ensure dark text for contrast */
+  .card-title,
+  .section-main-title,
+  .collapsible-title,
+  .insight-text,
+  .advantage-title,
+  .damaging-title,
+  .step-question,
+  .threat-card-header h4,
+  h1, h2, h3, h4, p, span, div {
+    color: #000 !important;
+  }
+
+  /* Page breaks between major sections */
+  .collapsible { page-break-inside: avoid; }
+
+  /* Hide spinner */
+  .report-spinner { display: none !important; }
+
+  /* Print-friendly buttons */
+  .btn-primary,
+  .btn-secondary { display: none !important; }
+
+  /* Full width */
+  body { margin: 0; padding: 0; }
+
+  /* Admin pages keep their own print styles */
+  .ant-layout-header,
+  .ant-tabs-nav,
+  .ant-btn {
+    display: none !important;
+  }
+
+  .ant-layout,
+  .ant-layout-content,
+  .ant-card,
+  .ant-table,
+  .ant-collapse,
+  .ant-collapse-content {
+    background: #fff !important;
+    color: #000 !important;
+    border-color: #ddd !important;
+  }
+
+  .ant-collapse-content {
+    display: block !important;
+    height: auto !important;
+  }
+
+  .ant-collapse-content-hidden {
+    display: block !important;
+    height: auto !important;
+  }
+}

@@ -1,0 +1,50 @@
+/* Report Theme — Light professional design with navy/azure palette */
+
+:root {
+  --navy: #0D1B2A;
+  --blue: #1B4B7A;
+  --azure: #2E6BA6;
+  --gray-900: #1A1A2E;
+  --gray-700: #4A4A68;
+  --gray-600: #6B6B8D;
+  --gray-500: #8E8EA9;
+  --gray-400: #B4B4C7;
+  --gray-300: #D1D1DE;
+  --gray-200: #E8E8EF;
+  --gray-100: #F4F4F8;
+  --gray-50: #FAFAFC;
+  --white: #FFFFFF;
+  --success: #059669;
+  --success-light: #D1FAE5;
+  --warning: #D97706;
+  --warning-light: #FEF3C7;
+  --danger: #DC2626;
+  --danger-light: #FEE2E2;
+  --data-blue: #2563EB;
+  --data-emerald: #059669;
+  --data-amber: #D97706;
+  --data-rose: #DC2626;
+  --data-purple: #7C3AED;
+  --threat-high: #DC2626;
+  --threat-medium: #D97706;
+  --threat-low: #059669;
+  --brand-red: #2B7AE8;
+  --brand-red-dark: #1A5BB8;
+  --brand-red-light: #EBF2FC;
+  --brand-accent: #4A9EFF;
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
