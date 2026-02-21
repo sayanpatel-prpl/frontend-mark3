@@ -6,7 +6,7 @@ export default function CompetitiveAdvantages({ battlecard }) {
 
   return (
     <Collapsible title="Competitive Advantages">
-      <div style={{ background: 'linear-gradient(135deg, var(--success-light) 0%, #A7F3D0 100%)', borderRadius: 8, padding: '1.25rem' }}>
+      <div style={{ background: 'var(--success-light)', borderRadius: 8, padding: '1.25rem' }}>
         {advantages.map((adv, i) => (
           <div key={i} className="advantage-card">
             <div className="advantage-title">{adv.advantage}</div>

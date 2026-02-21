@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Table, Button, Modal, Form, Input, Switch, Tag, Space, message } from 'antd';
+import { Table, Button, Modal, Form, Input, Switch, Tag, Space, message, theme } from 'antd';
 import { Plus, RefreshCw } from 'lucide-react';
 import { companyApi } from '../services/api';
 
@@ -13,6 +13,7 @@ const statusTag = (status) => {
 };
 
 export default function Companies() {
+  const { token } = theme.useToken();
   const [companies, setCompanies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showInactive, setShowInactive] = useState(false);
@@ -170,7 +171,7 @@ export default function Companies() {
 
   const columns = [
     { title: 'Name', dataIndex: 'name', key: 'name', fixed: 'left', width: 160 },
-    { title: 'Website', dataIndex: 'website', key: 'website', width: 140, render: (v) => v || '-' },
+    { title: 'Website', dataIndex: 'website', key: 'website', width: 200, ellipsis: true, render: (v) => v ? <span title={v}>{v}</span> : '-' },
     {
       title: 'LinkedIn', key: 'linkedin', width: 120,
       render: (_, c) => (
@@ -292,11 +293,16 @@ export default function Companies() {
   ];
 
   return (
-    <div>
+    <div style={{
+      background: token.colorBgContainer,
+      borderRadius: 12,
+      padding: 24,
+      border: `1px solid ${token.colorBorderSecondary}`,
+    }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <h2 style={{ margin: 0 }}>Companies</h2>
         <Space>
-          <span style={{ color: '#888', fontSize: 13 }}>Show inactive</span>
+          <span style={{ fontSize: 13, opacity: 0.5 }}>Show inactive</span>
           <Switch size="small" checked={showInactive} onChange={setShowInactive} />
           <Button type="primary" icon={<Plus size={14} />} onClick={() => {
             setEditingCompany(null); form.resetFields(); setModalOpen(true);

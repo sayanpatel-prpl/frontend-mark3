@@ -16,7 +16,7 @@ function ReportLanding({ data, onEnter }) {
   return (
     <div className="landing">
       <div className="landing-content">
-        <div className="logo"><span>K</span>ompete</div>
+        <div className="logo"><span>KO</span>MPETE</div>
         <h1>Competitive Battlecards</h1>
         <p className="landing-subtitle">{project.mainCompany} vs {competitors.length} Competitors</p>
         <div className="landing-meta">
@@ -162,8 +162,8 @@ export default function Report() {
           <div className="report-error-title">Failed to load report</div>
           <div className="report-error-desc">{error}</div>
         </div>
-        <button className="btn-secondary" onClick={() => navigate('/projects')} style={{ marginTop: 16 }}>
-          ← Back to Projects
+        <button className="btn-secondary" onClick={() => navigate('/reports')} style={{ marginTop: 16 }}>
+          ← Back to Reports
         </button>
       </div>
     );
@@ -172,7 +172,7 @@ export default function Report() {
   if (!data) return null;
 
   if (showLanding) {
-    return <ReportLanding data={data} onEnter={() => setShowLanding(false)} />;
+    return <div className="report-root"><ReportLanding data={data} onEnter={() => setShowLanding(false)} /></div>;
   }
 
   const tabs = [
@@ -218,22 +218,28 @@ export default function Report() {
 
   return (
     <CollapsibleContext.Provider value={{ expandSignal: 0, collapseSignal }}>
-      <div className="report-container" ref={printRef}>
+      <div className="report-root report-container" ref={printRef}>
         <div className="report-header">
-          <div className="report-logo"><span>K</span>ompete</div>
+          <div className="report-logo"><span>KO</span>MPETE</div>
           <div className="report-actions">
-            <button
-              className="btn-secondary"
-              onClick={handleRefresh}
-              disabled={refreshing}
-              style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}
-            >
-              <RefreshCw size={14} className={refreshing ? 'spinning' : ''} />
-              {refreshing ? 'Regenerating...' : 'Regenerate'}
-            </button>
-            <button className="btn-secondary" onClick={() => setCollapseSignal((s) => s + 1)}>
-              Collapse All
-            </button>
+            {(() => {
+              try {
+                const u = JSON.parse(localStorage.getItem('user') || '{}');
+                const domain = u.email?.split('@')[1];
+                if (domain === 'gmail.com') return (
+                  <button
+                    className="btn-secondary"
+                    onClick={handleRefresh}
+                    disabled={refreshing}
+                    style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}
+                  >
+                    <RefreshCw size={14} className={refreshing ? 'spinning' : ''} />
+                    {refreshing ? 'Regenerating...' : 'Regenerate'}
+                  </button>
+                );
+              } catch (_) {}
+              return null;
+            })()}
             <button className="btn-secondary" onClick={() => reactToPrintFn()}>
               Export PDF
             </button>
@@ -247,7 +253,7 @@ export default function Report() {
         </div>
 
         <footer className="report-footer">
-          <div className="footer-logo"><span style={{ color: 'var(--brand-accent)' }}>K</span>ompete</div>
+          <div className="footer-logo"><span style={{ color: 'var(--brand-accent)' }}>KO</span>MPETE</div>
           <div className="footer-text">Generated for {data.project.mainCompany}</div>
         </footer>
       </div>

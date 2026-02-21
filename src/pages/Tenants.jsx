@@ -109,7 +109,7 @@ export default function Tenants() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <h2 style={{ margin: 0 }}>Tenants</h2>
         <Space>
-          <span style={{ color: '#888', fontSize: 13 }}>Show inactive</span>
+          <span style={{ fontSize: 13, opacity: 0.5 }}>Show inactive</span>
           <Switch size="small" checked={showInactive} onChange={setShowInactive} />
           <Button type="primary" icon={<Plus size={14} />} onClick={() => {
             setEditingTenant(null);
