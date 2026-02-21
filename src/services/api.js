@@ -1,12 +1,29 @@
 const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
+function forceLogout() {
+  localStorage.removeItem('user');
+  localStorage.removeItem('lastActivity');
+  window.location.href = '/';
+}
+
 async function request(path, options = {}) {
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
   const res = await fetch(`${BASE_URL}${path}`, {
-    headers: { 'Content-Type': 'application/json', ...options.headers },
+    headers: {
+      'Content-Type': 'application/json',
+      'x-user-id': user.id || '',
+      ...options.headers,
+    },
     ...options,
   });
   const data = await res.json();
+  if (res.status === 401) {
+    forceLogout();
+    throw new Error('Session expired');
+  }
   if (!res.ok) throw new Error(data.error || 'Request failed');
+  // Update activity timestamp on every successful API call
+  localStorage.setItem('lastActivity', Date.now().toString());
   return data;
 }
 
@@ -14,6 +31,13 @@ export const authApi = {
   sendOtp: (email) => request('/auth/send-otp', { method: 'POST', body: JSON.stringify({ email }) }),
   verifyOtp: (email, otp) => request('/auth/verify-otp', { method: 'POST', body: JSON.stringify({ email, otp }) }),
   logout: () => request('/auth/logout', { method: 'POST' }),
+};
+
+export const userApi = {
+  getAll: () => request('/users'),
+  create: (data) => request('/users', { method: 'POST', body: JSON.stringify(data) }),
+  update: (id, data) => request(`/users/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  delete: (id) => request(`/users/${id}`, { method: 'DELETE' }),
 };
 
 export const tenantApi = {

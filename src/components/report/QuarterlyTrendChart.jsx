@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 
-const COLORS = ['#2E6BA6', '#059669', '#D97706', '#DC2626', '#2563EB', '#7C3AED', '#ec4899', '#14b8a6'];
+const COLORS = ['#C9A84C', '#059669', '#D97706', '#DC2626', '#2563EB', '#7C3AED', '#ec4899', '#14b8a6'];
 
 export default function QuarterlyTrendChart({ quarterlyTrend }) {
   const { quarters, series } = quarterlyTrend || {};

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Card, Form, Input, Button, Alert, message } from 'antd';
+import { Card, Form, Input, Button, Alert } from 'antd';
 import { authApi } from '../services/api';
 
 export default function SignIn({ onLogin }) {
@@ -7,15 +7,13 @@ export default function SignIn({ onLogin }) {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [devOtp, setDevOtp] = useState('');
 
   const handleSendOtp = async ({ email: formEmail }) => {
     setLoading(true);
     setError('');
     try {
-      const data = await authApi.sendOtp(formEmail);
+      await authApi.sendOtp(formEmail);
       setEmail(formEmail);
-      if (data.otp_dev) setDevOtp(data.otp_dev);
       setStep('otp');
     } catch (err) {
       setError(err.message);
@@ -40,11 +38,11 @@ export default function SignIn({ onLogin }) {
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: 20 }}>
-      <Card style={{ width: 400, background: '#1a1a1a', border: '1px solid #333' }}>
+      <Card style={{ width: 400 }}>
         <h1 style={{ textAlign: 'center', marginBottom: 4, letterSpacing: '-0.5px' }}>
-          <span style={{ color: '#4A9EFF' }}>K</span>ompete
+          <span style={{ color: '#C9A84C' }}>KO</span>MPETE
         </h1>
-        <p style={{ textAlign: 'center', color: '#888', marginBottom: 24 }}>Sign in to continue</p>
+        <p style={{ textAlign: 'center', opacity: 0.5, marginBottom: 24 }}>Sign in to continue</p>
 
         {error && <Alert type="error" message={error} style={{ marginBottom: 16 }} showIcon />}
 
@@ -60,19 +58,19 @@ export default function SignIn({ onLogin }) {
         ) : (
           <Form onFinish={handleVerifyOtp} layout="vertical">
             <Form.Item label="Email">
-              <span style={{ color: '#4A9EFF' }}>{email}</span>
+              <span style={{ color: '#C9A84C' }}>{email}</span>
             </Form.Item>
+
+            <Alert
+              type="success"
+              message="OTP has been sent to your email"
+              style={{ marginBottom: 16 }}
+              showIcon
+            />
+
             <Form.Item label="Enter 6-digit OTP" name="otp" rules={[{ required: true }]}>
               <Input placeholder="123456" maxLength={6} size="large" />
             </Form.Item>
-
-            {devOtp && (
-              <Alert
-                type="info"
-                message={<>Dev OTP: <strong>{devOtp}</strong></>}
-                style={{ marginBottom: 16, background: '#2a2a2a', borderColor: '#4A9EFF', borderStyle: 'dashed' }}
-              />
-            )}
 
             <Button type="primary" htmlType="submit" loading={loading} block size="large">
               Verify OTP
@@ -81,7 +79,7 @@ export default function SignIn({ onLogin }) {
               type="text"
               block
               style={{ marginTop: 8 }}
-              onClick={() => { setStep('email'); setDevOtp(''); }}
+              onClick={() => setStep('email')}
             >
               Back
             </Button>

@@ -33,7 +33,7 @@ export default function MarketOverview({ data }) {
         project={project}
       />
 
-      <div style={{ marginTop: '2rem' }}>
+      <div className="card" style={{ padding: '1.5rem' }}>
         <h3 className="section-main-title" style={{ fontSize: '1.25rem' }}>Threat Assessment</h3>
         <p className="section-subtitle">AI-generated threat analysis for each competitor</p>
         <ThreatCards competitors={competitors} />

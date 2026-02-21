@@ -17,7 +17,7 @@ export default function SelfAssessmentBody({ selfAssessment }) {
 
       {/* Real Strengths */}
       <Collapsible title="Real Strengths (What Customers Love)" defaultOpen>
-        <div style={{ background: 'linear-gradient(135deg, var(--success-light) 0%, #A7F3D0 100%)', borderRadius: 8, padding: '1.25rem' }}>
+        <div style={{ background: 'var(--success-light)', borderRadius: 8, padding: '1.25rem' }}>
           {(selfAssessment.realStrengths || []).map((s, i) => (
             <div key={i} className="advantage-card">
               <div className="advantage-title">{s.point}</div>
