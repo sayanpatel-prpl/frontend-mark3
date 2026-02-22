@@ -137,8 +137,8 @@ export default function FeatureReport() {
           <div className="report-error-desc">{error}</div>
         </div>
         <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
-          <button className="btn-secondary" onClick={() => navigate('/projects')}>
-            Back to Projects
+          <button className="btn-secondary" onClick={() => navigate('/feature-reports')}>
+            Back to Reports
           </button>
           <button className="btn-primary" onClick={() => { setError(''); loadReport(); }}>
             Retry
@@ -153,9 +153,9 @@ export default function FeatureReport() {
   const { meta } = data;
 
   return (
-    <div className="report-container" ref={printRef}>
+    <div className="report-root report-container" ref={printRef}>
       <div className="report-header">
-        <div className="report-logo"><span>K</span>ompete</div>
+        <div className="report-logo"><span>KO</span>MPETE</div>
         <div className="report-actions">
           <button
             className="btn-secondary"
@@ -195,7 +195,7 @@ export default function FeatureReport() {
       </div>
 
       <footer className="report-footer">
-        <div className="footer-logo"><span style={{ color: 'var(--brand-accent)' }}>K</span>ompete</div>
+        <div className="footer-logo"><span style={{ color: 'var(--brand-accent)' }}>KO</span>MPETE</div>
         <div className="footer-text">Feature Intelligence Report &bull; {meta.main_company?.name}</div>
       </footer>
     </div>

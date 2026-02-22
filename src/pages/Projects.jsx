@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Table, Button, Modal, Form, Input, Select, Tag, Progress, Space, Card, Popconfirm, message } from 'antd';
+import { Table, Button, Modal, Form, Input, Select, Tag, Progress, Space, Card as AntCard, Popconfirm, message, theme } from 'antd';
 import { Plus, FileText, LayoutGrid } from 'lucide-react';
 import { projectApi, companyApi } from '../services/api';
 
@@ -15,6 +15,7 @@ const statusMap = {
 };
 
 function CompanyCard({ projectId, companyId, companyName, isMain, progress, onGenerate }) {
+  const { token } = theme.useToken();
   const chunkInfo = progress?.chunks;
   const megaInfo = progress?.mega_summary;
   const isWorking = megaInfo?.status === 'in_progress' || megaInfo?.status === 'summarizing';
@@ -23,7 +24,7 @@ function CompanyCard({ projectId, companyId, companyName, isMain, progress, onGe
   const statusInfo = statusMap[megaInfo?.status] || statusMap.idle;
 
   return (
-    <Card size="small" style={{ marginBottom: 8, background: '#1a1a1a', border: '1px solid #333' }}>
+    <AntCard size="small" style={{ marginBottom: 8 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
         <Space>
           <strong>{companyName}</strong>
@@ -56,8 +57,9 @@ function CompanyCard({ projectId, companyId, companyName, isMain, progress, onGe
 
       {megaInfo?.text && megaInfo.status === 'completed' && (
         <div style={{
-          whiteSpace: 'pre-wrap', fontSize: 13, lineHeight: 1.6, color: '#ccc',
-          padding: 12, background: '#141414', borderRadius: 4, border: '1px solid #333',
+          whiteSpace: 'pre-wrap', fontSize: 13, lineHeight: 1.6, color: token.colorTextSecondary,
+          padding: 12, background: token.colorBgLayout, borderRadius: 4,
+          border: `1px solid ${token.colorBorderSecondary}`,
           maxHeight: 400, overflowY: 'auto',
         }}>
           {megaInfo.text}
@@ -68,12 +70,13 @@ function CompanyCard({ projectId, companyId, companyName, isMain, progress, onGe
           All chunks processed. Generating mega summary...
         </div>
       )}
-    </Card>
+    </AntCard>
   );
 }
 
 export default function Projects() {
   const navigate = useNavigate();
+  const { token } = theme.useToken();
   const [projects, setProjects] = useState([]);
   const [companies, setCompanies] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -230,7 +233,12 @@ export default function Projects() {
   ];
 
   return (
-    <div>
+    <div style={{
+      background: token.colorBgContainer,
+      borderRadius: 12,
+      padding: 24,
+      border: `1px solid ${token.colorBorderSecondary}`,
+    }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <h2 style={{ margin: 0 }}>Projects</h2>
         <Button type="primary" icon={<Plus size={14} />} onClick={() => {

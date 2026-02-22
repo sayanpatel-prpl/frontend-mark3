@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { Card, Form, Input, Button, Collapse, Descriptions, List, Tag, message } from 'antd';
+import { Card, Form, Input, Button, Collapse, Descriptions, List, Tag, message, theme } from 'antd';
 import { Globe } from 'lucide-react';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
 export default function WebsiteAnalysis() {
+  const { token } = theme.useToken();
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
 
@@ -49,12 +50,12 @@ export default function WebsiteAnalysis() {
   return (
     <div>
       <h2 style={{ marginBottom: 4 }}>Website Intelligence Agent</h2>
-      <p style={{ color: '#888', marginBottom: 24, fontSize: 13 }}>
+      <p style={{ opacity: 0.5, marginBottom: 24, fontSize: 13 }}>
         Run a cost-efficient scrape + analysis on a competitor site. The agent will pick up to 5 high-intent pages,
         scrape them with Firecrawl, and generate product and buyer-intent insights.
       </p>
 
-      <Card style={{ marginBottom: 24, background: '#1a1a1a', border: '1px solid #333' }}>
+      <Card style={{ marginBottom: 24 }}>
         <Form onFinish={handleSubmit} layout="vertical">
           <Form.Item label="Website URL" name="website_url" rules={[{ required: true, type: 'url' }]}>
             <Input placeholder="https://www.anaplan.com" prefix={<Globe size={14} />} />
@@ -73,7 +74,7 @@ export default function WebsiteAnalysis() {
 
       {result && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <Card title="Selected URLs" size="small" style={{ background: '#1a1a1a', border: '1px solid #333' }}>
+          <Card title="Selected URLs" size="small">
             <List
               dataSource={result.selected_urls || []}
               renderItem={(item) => (
@@ -93,7 +94,7 @@ export default function WebsiteAnalysis() {
 
           {insightsItems.length > 0 && <Collapse defaultActiveKey={['insights']} items={insightsItems} />}
 
-          <Card title="Page Snapshots" size="small" style={{ background: '#1a1a1a', border: '1px solid #333' }}>
+          <Card title="Page Snapshots" size="small">
             <List
               dataSource={result.scraped_content || []}
               renderItem={(page) => (
@@ -112,8 +113,8 @@ export default function WebsiteAnalysis() {
             />
           </Card>
 
-          <Card title="Raw JSON" size="small" style={{ background: '#1a1a1a', border: '1px solid #333' }}>
-            <pre style={{ fontSize: 11, maxHeight: 400, overflow: 'auto', color: '#aaa' }}>
+          <Card title="Raw JSON" size="small">
+            <pre style={{ fontSize: 11, maxHeight: 400, overflow: 'auto', color: token.colorTextSecondary }}>
               {JSON.stringify(result, null, 2)}
             </pre>
           </Card>
