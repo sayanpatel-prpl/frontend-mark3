@@ -199,7 +199,13 @@ export default function Companies() {
         if (status === 'analyzing') {
           const analyzed = prog?.pages_analyzed ?? c.website_pages_analyzed ?? 0;
           const total = prog?.pages_total ?? c.website_pages_total ?? 0;
-          return <Tag color="orange">Analyzing {analyzed}/{total}</Tag>;
+          return (
+            <Space size={4} wrap>
+              <Tag color="orange">Analyzing {analyzed}/{total}</Tag>
+              <Button size="small" type="link"
+                onClick={refreshAction(companyApi.resumeWebsiteAnalysis, c.id)}>Resume</Button>
+            </Space>
+          );
         }
         if (status === 'success') {
           const success = prog?.pages_success ?? c.website_pages_scraped ?? 0;

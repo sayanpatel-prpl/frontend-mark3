@@ -1,8 +1,18 @@
 const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
+function getActiveTenantId() {
+  return localStorage.getItem('activeTenantId') || '';
+}
+
+function tenantPath(path) {
+  const tenantId = getActiveTenantId();
+  return `/tenant/${tenantId}${path}`;
+}
+
 function forceLogout() {
   localStorage.removeItem('user');
   localStorage.removeItem('lastActivity');
+  localStorage.removeItem('activeTenantId');
   window.location.href = '/';
 }
 
@@ -34,10 +44,10 @@ export const authApi = {
 };
 
 export const userApi = {
-  getAll: () => request('/users'),
-  create: (data) => request('/users', { method: 'POST', body: JSON.stringify(data) }),
-  update: (id, data) => request(`/users/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
-  delete: (id) => request(`/users/${id}`, { method: 'DELETE' }),
+  getAll: () => request(tenantPath('/users')),
+  create: (data) => request(tenantPath('/users'), { method: 'POST', body: JSON.stringify(data) }),
+  update: (id, data) => request(tenantPath(`/users/${id}`), { method: 'PUT', body: JSON.stringify(data) }),
+  delete: (id) => request(tenantPath(`/users/${id}`), { method: 'DELETE' }),
 };
 
 export const tenantApi = {
@@ -50,54 +60,59 @@ export const tenantApi = {
 };
 
 export const companyApi = {
-  getAll: (includeInactive = false) => request(`/companies?includeInactive=${includeInactive}`),
-  getById: (id) => request(`/companies/${id}`),
-  create: (data) => request('/companies', { method: 'POST', body: JSON.stringify(data) }),
-  update: (id, data) => request(`/companies/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
-  delete: (id) => request(`/companies/${id}`, { method: 'DELETE' }),
-  restore: (id) => request(`/companies/${id}/restore`, { method: 'POST' }),
-  enrich: (id) => request(`/companies/${id}/enrich`, { method: 'POST' }),
-  refreshLinkedIn: (id) => request(`/companies/${id}/refresh-linkedin`, { method: 'POST' }),
-  refreshG2: (id) => request(`/companies/${id}/refresh-g2`, { method: 'POST' }),
-  refreshGartner: (id) => request(`/companies/${id}/refresh-gartner`, { method: 'POST' }),
-  refreshTrustpilot: (id) => request(`/companies/${id}/refresh-trustpilot`, { method: 'POST' }),
-  refreshCapterra: (id) => request(`/companies/${id}/refresh-capterra`, { method: 'POST' }),
-  refreshAllLogos: () => request('/companies/refresh-logos', { method: 'POST' }),
-  generateSummaries: (id) => request(`/companies/${id}/generate-summaries`, { method: 'POST' }),
-  getSummaryProgress: (id) => request(`/companies/${id}/summary-progress`),
-  refreshWebsiteScrape: (id) => request(`/companies/${id}/refresh-website-scrape`, { method: 'POST' }),
-  retryFailedWebsiteAnalysis: (id) => request(`/companies/${id}/retry-failed-website-analysis`, { method: 'POST' }),
-  getWebsiteScrapeProgress: (id) => request(`/companies/${id}/website-scrape-progress`),
+  getAll: (includeInactive = false) => request(tenantPath(`/companies?includeInactive=${includeInactive}`)),
+  getById: (id) => request(tenantPath(`/companies/${id}`)),
+  create: (data) => request(tenantPath('/companies'), { method: 'POST', body: JSON.stringify(data) }),
+  update: (id, data) => request(tenantPath(`/companies/${id}`), { method: 'PUT', body: JSON.stringify(data) }),
+  delete: (id) => request(tenantPath(`/companies/${id}`), { method: 'DELETE' }),
+  restore: (id) => request(tenantPath(`/companies/${id}/restore`), { method: 'POST' }),
+  enrich: (id) => request(tenantPath(`/companies/${id}/enrich`), { method: 'POST' }),
+  refreshLinkedIn: (id) => request(tenantPath(`/companies/${id}/refresh-linkedin`), { method: 'POST' }),
+  refreshG2: (id) => request(tenantPath(`/companies/${id}/refresh-g2`), { method: 'POST' }),
+  refreshGartner: (id) => request(tenantPath(`/companies/${id}/refresh-gartner`), { method: 'POST' }),
+  refreshTrustpilot: (id) => request(tenantPath(`/companies/${id}/refresh-trustpilot`), { method: 'POST' }),
+  refreshCapterra: (id) => request(tenantPath(`/companies/${id}/refresh-capterra`), { method: 'POST' }),
+  refreshAllLogos: () => request(tenantPath('/companies/refresh-logos'), { method: 'POST' }),
+  generateSummaries: (id) => request(tenantPath(`/companies/${id}/generate-summaries`), { method: 'POST' }),
+  getSummaryProgress: (id) => request(tenantPath(`/companies/${id}/summary-progress`)),
+  refreshWebsiteScrape: (id) => request(tenantPath(`/companies/${id}/refresh-website-scrape`), { method: 'POST' }),
+  retryFailedWebsiteAnalysis: (id) => request(tenantPath(`/companies/${id}/retry-failed-website-analysis`), { method: 'POST' }),
+  resumeWebsiteAnalysis: (id) => request(tenantPath(`/companies/${id}/resume-website-analysis`), { method: 'POST' }),
+  getWebsiteScrapeProgress: (id) => request(tenantPath(`/companies/${id}/website-scrape-progress`)),
 };
 
 export const projectApi = {
-  getAll: () => request('/projects'),
-  getById: (id) => request(`/projects/${id}`),
-  create: (data) => request('/projects', { method: 'POST', body: JSON.stringify(data) }),
-  delete: (id) => request(`/projects/${id}`, { method: 'DELETE' }),
+  getAll: () => request(tenantPath('/projects')),
+  getById: (id) => request(tenantPath(`/projects/${id}`)),
+  create: (data) => request(tenantPath('/projects'), { method: 'POST', body: JSON.stringify(data) }),
+  delete: (id) => request(tenantPath(`/projects/${id}`), { method: 'DELETE' }),
   generateSummary: (projectId, companyId) =>
-    request(`/projects/${projectId}/companies/${companyId}/generate-summary`, { method: 'POST' }),
+    request(tenantPath(`/projects/${projectId}/companies/${companyId}/generate-summary`), { method: 'POST' }),
   getSummaryProgress: (projectId, companyId) =>
-    request(`/projects/${projectId}/companies/${companyId}/summary-progress`),
-  getProjectProgress: (id) => request(`/projects/${id}/progress`),
+    request(tenantPath(`/projects/${projectId}/companies/${companyId}/summary-progress`)),
+  getProjectProgress: (id) => request(tenantPath(`/projects/${id}/progress`)),
 };
 
 export const featureReportApi = {
   generate: (projectId, refresh = false) =>
-    request(`/projects/${projectId}/feature-report/generate${refresh ? '?refresh=true' : ''}`, { method: 'POST' }),
-  getStatus: (projectId) => request(`/projects/${projectId}/feature-report/status`),
-  getData: (projectId) => request(`/projects/${projectId}/feature-report/data`),
+    request(tenantPath(`/projects/${projectId}/feature-report/generate${refresh ? '?refresh=true' : ''}`), { method: 'POST' }),
+  getStatus: (projectId) => request(tenantPath(`/projects/${projectId}/feature-report/status`)),
+  getData: (projectId) => request(tenantPath(`/projects/${projectId}/feature-report/data`)),
 };
 
 export const reportApi = {
+  generate: (projectId, refresh = false) =>
+    request(tenantPath(`/projects/${projectId}/report/generate${refresh ? '?refresh=true' : ''}`), { method: 'POST' }),
+  getStatus: (projectId) => request(tenantPath(`/projects/${projectId}/report/status`)),
+  getData: (projectId) => request(tenantPath(`/projects/${projectId}/report/data`)),
   getMarketOverview: (projectId, { refresh = false } = {}) =>
-    request(`/projects/${projectId}/report-data.json${refresh ? '?refresh=true' : ''}`),
+    request(tenantPath(`/projects/${projectId}/report-data.json${refresh ? '?refresh=true' : ''}`)),
   getBattlecard: (projectId, companyId, threatData, { refresh = false } = {}) =>
-    request(`/projects/${projectId}/battlecard/${companyId}.json${refresh ? '?refresh=true' : ''}`, {
+    request(tenantPath(`/projects/${projectId}/battlecard/${companyId}.json${refresh ? '?refresh=true' : ''}`), {
       method: 'POST',
       body: JSON.stringify({ threatData }),
     }),
   getSelfAssessment: (projectId, { refresh = false } = {}) =>
-    request(`/projects/${projectId}/self-assessment.json${refresh ? '?refresh=true' : ''}`),
-  getReportUrl: (projectId) => `${BASE_URL}/projects/${projectId}/report`,
+    request(tenantPath(`/projects/${projectId}/self-assessment.json${refresh ? '?refresh=true' : ''}`)),
+  getReportUrl: (projectId) => `${BASE_URL}${tenantPath(`/projects/${projectId}/report`)}`,
 };

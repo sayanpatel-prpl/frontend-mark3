@@ -10,6 +10,7 @@ import Report from './pages/Report';
 import FeatureReport from './pages/FeatureReport';
 import UserManagement from './pages/UserManagement';
 import ReportProjectList from './pages/ReportProjectList';
+import TenantSelector from './components/TenantSelector';
 
 const { Sider, Content } = Layout;
 
@@ -45,7 +46,7 @@ function getSelectedKeys(pathname) {
   return [pathname];
 }
 
-function AppLayout({ user, onLogout, children }) {
+function AppLayout({ user, activeTenantId, onTenantChange, onLogout, children }) {
   const navigate = useNavigate();
   const location = useLocation();
   const { token } = theme.useToken();
@@ -58,6 +59,7 @@ function AppLayout({ user, onLogout, children }) {
 
   const handleLogout = () => {
     localStorage.removeItem('user');
+    localStorage.removeItem('activeTenantId');
     onLogout();
   };
 
@@ -173,6 +175,11 @@ function AppLayout({ user, onLogout, children }) {
             </div>
           )}
 
+          {/* Tenant selector for kompete users (expanded sidebar only) */}
+          {user?.tier === 'kompete' && !collapsed && (
+            <TenantSelector activeTenantId={activeTenantId} onTenantChange={onTenantChange} />
+          )}
+
           {/* Main nav */}
           <Menu
             mode="inline"
@@ -277,13 +284,16 @@ const INACTIVITY_TIMEOUT = 30 * 60 * 1000; // 30 minutes
 
 function App() {
   const [user, setUser] = useState(null);
+  const [activeTenantId, setActiveTenantId] = useState(null);
   const [loading, setLoading] = useState(true);
   const timerRef = useRef(null);
 
   const logout = useCallback(() => {
     localStorage.removeItem('user');
     localStorage.removeItem('lastActivity');
+    localStorage.removeItem('activeTenantId');
     setUser(null);
+    setActiveTenantId(null);
   }, []);
 
   // Inactivity auto-logout
@@ -319,10 +329,18 @@ function App() {
       if (lastActivity && Date.now() - lastActivity > INACTIVITY_TIMEOUT) {
         localStorage.removeItem('user');
         localStorage.removeItem('lastActivity');
+        localStorage.removeItem('activeTenantId');
       } else {
         const parsed = JSON.parse(savedUser);
         parsed.tier = computeTier(parsed);
         setUser(parsed);
+        // Restore active tenant from localStorage, or default to user's tenant
+        const raw = localStorage.getItem('activeTenantId');
+        const savedTenantId = raw ? Number(raw) : parsed.tenant_id;
+        setActiveTenantId(savedTenantId);
+        if (savedTenantId) {
+          localStorage.setItem('activeTenantId', savedTenantId);
+        }
       }
     }
     setLoading(false);
@@ -331,7 +349,20 @@ function App() {
   const handleLogin = (userData) => {
     userData.tier = computeTier(userData);
     localStorage.setItem('user', JSON.stringify(userData));
+    // Set active tenant to user's own tenant on login
+    const tenantId = userData.tenant_id;
+    setActiveTenantId(tenantId);
+    if (tenantId) {
+      localStorage.setItem('activeTenantId', tenantId);
+    }
     setUser(userData);
+  };
+
+  const handleTenantChange = (tenantId) => {
+    setActiveTenantId(tenantId);
+    localStorage.setItem('activeTenantId', tenantId);
+    // Force re-render of data by navigating to current page
+    window.location.reload();
   };
 
   if (loading) {
@@ -348,7 +379,7 @@ function App() {
 
   return (
     <BrowserRouter>
-      <AppLayout user={user} onLogout={() => setUser(null)}>
+      <AppLayout user={user} activeTenantId={activeTenantId} onTenantChange={handleTenantChange} onLogout={() => { setUser(null); setActiveTenantId(null); }}>
         <Routes>
           <Route path="/reports" element={<ReportProjectList reportType="review" />} />
           <Route path="/feature-reports" element={<ReportProjectList reportType="feature" />} />
