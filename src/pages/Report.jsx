@@ -63,7 +63,12 @@ export default function Report() {
     setLoading(true);
     setError('');
 
-    reportApi.getMarketOverview(projectId, { refresh })
+    // Try cached data first (instant), fall back to sync generation
+    const fetchData = refresh
+      ? reportApi.getMarketOverview(projectId, { refresh })
+      : reportApi.getData(projectId).catch(() => reportApi.getMarketOverview(projectId));
+
+    fetchData
       .then((result) => {
         setData(result);
 
