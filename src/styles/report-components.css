@@ -197,6 +197,9 @@
   color: var(--navy);
 }
 
+/* Tab section visibility */
+.tab-section-hidden { display: none; }
+
 /* Section */
 .section { animation: fadeIn 0.3s ease; }
 
@@ -313,6 +316,11 @@
 
 .matrix-name { font-weight: 600; color: var(--gray-900); text-align: left !important; }
 .matrix-cell { font-family: 'Inter', sans-serif; font-weight: 500; }
+
+/* Feature link hover */
+.feature-link:hover { color: #2563EB !important; }
+.feature-link:hover span { border-bottom-color: #2563EB !important; }
+.feature-link:hover svg { opacity: 1 !important; }
 
 /* Heatmap Cells */
 .heat-cell { font-family: 'Inter', sans-serif; font-weight: 600; }

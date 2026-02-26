@@ -1,5 +1,8 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { ExternalLink, X, ArrowUpRight } from 'lucide-react';
+import { Tooltip } from 'antd';
+import CompanyLogo from './CompanyLogo';
 
 const classColors = {
   advanced: { bg: '#7C3AED', text: '#fff' },
@@ -19,92 +22,239 @@ const classLabels = {
   none: 'None',
 };
 
-function ClassBadge({ classification, reason, matchedFeature, matchedUrl }) {
-  const [showTip, setShowTip] = useState(false);
-  const [tipPos, setTipPos] = useState({ top: 0, left: 0 });
-  const badgeRef = useRef(null);
-  const hideTimer = useRef(null);
+function ClassBadge({ classification, onClick }) {
   const style = classColors[classification] || classColors.none;
-  const hasContent = classification !== 'none' && (reason || matchedFeature);
-
-  const show = useCallback(() => {
-    clearTimeout(hideTimer.current);
-    if (!hasContent || !badgeRef.current) return;
-    const rect = badgeRef.current.getBoundingClientRect();
-    const tipWidth = 280;
-    let left = rect.left + rect.width / 2;
-    if (left - tipWidth / 2 < 8) left = tipWidth / 2 + 8;
-    if (left + tipWidth / 2 > window.innerWidth - 8) left = window.innerWidth - tipWidth / 2 - 8;
-    let top = rect.bottom + 8;
-    if (top + 120 > window.innerHeight) top = rect.top - 8;
-    setTipPos({ top, left, above: top !== rect.bottom + 8 });
-    setShowTip(true);
-  }, [hasContent]);
-
-  const hide = useCallback(() => {
-    hideTimer.current = setTimeout(() => setShowTip(false), 150);
-  }, []);
-
-  const tipEnter = useCallback(() => clearTimeout(hideTimer.current), []);
-
-  // Derive a short title from matchedUrl
-  const linkTitle = matchedUrl ? (() => {
-    try {
-      const u = new URL(matchedUrl);
-      const path = u.pathname.replace(/\/$/, '').split('/').pop() || '';
-      return path.replace(/[-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) || u.hostname;
-    } catch { return 'View Source'; }
-  })() : null;
+  const isClickable = classification !== 'none';
 
   return (
     <span
-      ref={badgeRef}
-      style={{ display: 'inline-block' }}
-      onMouseEnter={show}
-      onMouseLeave={hide}
-    >
-      <span style={{
+      onClick={isClickable ? onClick : undefined}
+      style={{
         display: 'inline-block', padding: '3px 10px', borderRadius: 4, fontSize: 11, fontWeight: 600,
         background: style.bg, color: style.text, whiteSpace: 'nowrap',
-        cursor: hasContent ? 'help' : 'default',
-        borderBottom: hasContent ? '2px dotted rgba(255,255,255,0.5)' : 'none',
+        cursor: isClickable ? 'pointer' : 'default',
+        borderBottom: isClickable ? '2px dotted rgba(255,255,255,0.5)' : 'none',
+        transition: 'transform 0.1s ease, box-shadow 0.1s ease',
+      }}
+      onMouseEnter={e => { if (isClickable) { e.currentTarget.style.transform = 'scale(1.08)'; e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.2)'; } }}
+      onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = 'none'; }}
+    >
+      {classLabels[classification] || classification}
+    </span>
+  );
+}
+
+function FeatureDrawer({ feature, competitors, logoMap, highlightCompetitorId, onClose }) {
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    requestAnimationFrame(() => setVisible(true));
+    const onKey = (e) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [onClose]);
+
+  const handleClose = () => {
+    setVisible(false);
+    setTimeout(onClose, 200);
+  };
+
+  // Sort: highlighted first, then by classification strength, none last
+  const classOrder = { advanced: 0, enterprise_grade: 1, strong: 2, partial: 3, basic: 4, none: 5 };
+  const sorted = [...competitors].sort((a, b) => {
+    if (a.id === highlightCompetitorId) return -1;
+    if (b.id === highlightCompetitorId) return 1;
+    const ca = feature.competitors?.[a.id]?.classification || 'none';
+    const cb = feature.competitors?.[b.id]?.classification || 'none';
+    return (classOrder[ca] ?? 5) - (classOrder[cb] ?? 5);
+  });
+
+  const withData = sorted.filter(c => (feature.competitors?.[c.id]?.classification || 'none') !== 'none');
+  const withoutData = sorted.filter(c => (feature.competitors?.[c.id]?.classification || 'none') === 'none');
+
+  return createPortal(
+    <>
+      {/* Backdrop */}
+      <div
+        onClick={handleClose}
+        style={{
+          position: 'fixed', inset: 0, background: 'rgba(15, 18, 25, 0.55)',
+          backdropFilter: 'blur(3px)', zIndex: 9998,
+          opacity: visible ? 1 : 0, transition: 'opacity 0.2s ease',
+        }}
+      />
+
+      {/* Panel */}
+      <div style={{
+        position: 'fixed', top: 0, right: 0, bottom: 0,
+        width: 560, maxWidth: '92vw',
+        background: 'var(--white, #fff)',
+        zIndex: 9999,
+        boxShadow: '-8px 0 48px rgba(0,0,0,0.18)',
+        display: 'flex', flexDirection: 'column',
+        transform: visible ? 'translateX(0)' : 'translateX(100%)',
+        transition: 'transform 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
       }}>
-        {classLabels[classification] || classification}
-      </span>
-      {showTip && createPortal(
-        <div
-          onMouseEnter={tipEnter}
-          onMouseLeave={hide}
-          style={{
-            position: 'fixed', top: tipPos.above ? undefined : tipPos.top, bottom: tipPos.above ? `calc(100vh - ${tipPos.top}px)` : undefined,
-            left: tipPos.left, transform: 'translateX(-50%)',
-            background: '#1E293B', color: '#E2E8F0', padding: '10px 14px', borderRadius: 10,
-            fontSize: 12, lineHeight: 1.5, maxWidth: 280, minWidth: 180,
-            boxShadow: '0 8px 30px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.05)',
-            zIndex: 10000, whiteSpace: 'normal',
-            border: '1px solid rgba(255,255,255,0.08)',
-          }}>
+
+        {/* Header */}
+        <div style={{
+          padding: '28px 32px 22px',
+          background: '#0F1219',
+          color: '#fff',
+          flexShrink: 0,
+        }}>
           <div style={{
-            position: 'absolute', [tipPos.above ? 'top' : 'bottom']: '100%', left: '50%', transform: 'translateX(-50%)',
-            width: 0, height: 0, borderLeft: '6px solid transparent', borderRight: '6px solid transparent',
-            [tipPos.above ? 'borderTop' : 'borderBottom']: '6px solid #1E293B',
-          }} />
-          {matchedFeature && (
-            <div style={{ color: '#fff', fontWeight: 600, fontSize: 12, marginBottom: 4 }}>
-              {matchedUrl ? (
-                <a href={matchedUrl} target="_blank" rel="noopener noreferrer" style={{
-                  color: '#60A5FA', textDecoration: 'none', borderBottom: '1px dashed rgba(96,165,250,0.4)',
-                }}>
-                  {matchedFeature}
+            display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16,
+          }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <h3 style={{
+                fontSize: '1.3rem', fontWeight: 700, margin: 0, lineHeight: 1.35,
+                color: '#F8FAFC',
+              }}>
+                {feature.title || feature.feature}
+              </h3>
+              {feature.url && (
+                <a href={feature.url} target="_blank" rel="noopener noreferrer" style={{
+                  fontSize: 13, color: '#94A3B8', textDecoration: 'none',
+                  display: 'inline-flex', alignItems: 'center', gap: 5, marginTop: 8,
+                  transition: 'color 0.15s',
+                }}
+                  onMouseEnter={e => e.currentTarget.style.color = '#CBD5E1'}
+                  onMouseLeave={e => e.currentTarget.style.color = '#94A3B8'}
+                >
+                  Source page <ArrowUpRight size={13} />
                 </a>
-              ) : matchedFeature}
+              )}
+            </div>
+            <button onClick={handleClose} style={{
+              background: 'rgba(255,255,255,0.1)', border: 'none', cursor: 'pointer',
+              padding: 8, borderRadius: 8, color: '#94A3B8', flexShrink: 0,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              transition: 'background 0.15s, color 0.15s',
+            }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.2)'; e.currentTarget.style.color = '#fff'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = '#94A3B8'; }}
+            >
+              <X size={20} />
+            </button>
+          </div>
+
+          {/* Quick summary bar */}
+          <div style={{
+            display: 'flex', gap: 8, marginTop: 16, flexWrap: 'wrap',
+          }}>
+            {withData.map(c => {
+              const cl = feature.competitors?.[c.id]?.classification || 'none';
+              const colors = classColors[cl];
+              return (
+                <span key={c.id} style={{
+                  fontSize: 12, padding: '4px 10px', borderRadius: 5,
+                  background: colors.bg, color: colors.text, fontWeight: 600,
+                  opacity: c.id === highlightCompetitorId ? 1 : 0.75,
+                  display: 'inline-flex', alignItems: 'center', gap: 6,
+                }}>
+                  <CompanyLogo name={c.name} logoUrl={logoMap?.[c.name]} size={14} />
+                  {c.name}
+                </span>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Body */}
+        <div style={{
+          flex: 1, overflow: 'auto', padding: '24px 32px',
+        }}>
+          {withData.map(c => {
+            const comp = feature.competitors?.[c.id];
+            const classification = comp?.classification || 'none';
+            const colors = classColors[classification];
+            const isHighlighted = c.id === highlightCompetitorId;
+
+            return (
+              <div key={c.id} style={{
+                marginBottom: 20,
+                borderLeft: `4px solid ${isHighlighted ? colors.bg : 'var(--gray-200)'}`,
+                paddingLeft: 20,
+                paddingBottom: 4,
+                transition: 'border-color 0.2s',
+              }}>
+                {/* Competitor name + logo + badge row */}
+                <div style={{
+                  display: 'flex', alignItems: 'center', gap: 10,
+                  marginBottom: 10,
+                }}>
+                  <CompanyLogo name={c.name} logoUrl={logoMap?.[c.name]} size={24} />
+                  <span style={{
+                    fontSize: '1.05rem', fontWeight: 700,
+                    color: isHighlighted ? 'var(--navy)' : 'var(--gray-800)',
+                  }}>
+                    {c.name}
+                  </span>
+                  <span style={{
+                    padding: '3px 10px', borderRadius: 5, fontSize: 11, fontWeight: 700,
+                    background: colors.bg, color: colors.text,
+                  }}>
+                    {classLabels[classification]}
+                  </span>
+                </div>
+
+                {/* Matched feature */}
+                {comp?.matched_feature && (
+                  <div style={{ fontSize: 15, color: 'var(--gray-700)', marginBottom: 8 }}>
+                    {comp.matched_url ? (
+                      <a href={comp.matched_url} target="_blank" rel="noopener noreferrer" style={{
+                        color: '#2563EB', textDecoration: 'none',
+                        display: 'inline-flex', alignItems: 'center', gap: 5,
+                      }}
+                        onMouseEnter={e => e.currentTarget.style.textDecoration = 'underline'}
+                        onMouseLeave={e => e.currentTarget.style.textDecoration = 'none'}
+                      >
+                        {comp.matched_feature}
+                        <ArrowUpRight size={13} style={{ opacity: 0.6 }} />
+                      </a>
+                    ) : (
+                      <span style={{ fontWeight: 500 }}>{comp.matched_feature}</span>
+                    )}
+                  </div>
+                )}
+
+                {/* Reason */}
+                {comp?.reason && (
+                  <div style={{
+                    fontSize: 14, color: 'var(--gray-600)', lineHeight: 1.7,
+                  }}>
+                    {comp.reason}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+
+          {/* None competitors */}
+          {withoutData.length > 0 && (
+            <div style={{
+              marginTop: 12, paddingTop: 18,
+              borderTop: '1px solid var(--gray-200)',
+            }}>
+              <div style={{
+                fontSize: 13, color: 'var(--gray-400)', fontWeight: 500,
+                display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap',
+              }}>
+                <span>No coverage &mdash;</span>
+                {withoutData.map(c => (
+                  <span key={c.id} style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                    <CompanyLogo name={c.name} logoUrl={logoMap?.[c.name]} size={16} />
+                    {c.name}
+                  </span>
+                ))}
+              </div>
             </div>
           )}
-          {reason && <div style={{ color: '#CBD5E1' }}>{reason}</div>}
-        </div>,
-        document.body
-      )}
-    </span>
+        </div>
+      </div>
+    </>,
+    document.body
   );
 }
 
@@ -112,6 +262,15 @@ export default function FeatureMatrix({ data, meta }) {
   if (!data || data.length === 0) return null;
 
   const competitors = meta.competitors || [];
+  const logoMap = {};
+  for (const c of [meta.main_company, ...competitors].filter(Boolean)) {
+    logoMap[c.name] = c.logo_url;
+  }
+  const [drawer, setDrawer] = useState(null);
+
+  const openDrawer = useCallback((feature, competitorId) => {
+    setDrawer({ feature, highlightCompetitorId: competitorId });
+  }, []);
 
   return (
     <div className="card" style={{ overflow: 'auto' }}>
@@ -140,22 +299,40 @@ export default function FeatureMatrix({ data, meta }) {
           <table className="comparison-matrix" style={{ minWidth: 600, marginBottom: 0 }}>
             <thead>
               <tr>
-                <th style={{ minWidth: 200 }}>Feature</th>
-                {competitors.map(c => <th key={c.id} style={{ textAlign: 'center', minWidth: 110 }}>{c.name}</th>)}
+                <th style={{ minWidth: 340 }}>Feature</th>
+                {competitors.map(c => (
+                  <th key={c.id} style={{ textAlign: 'center', minWidth: 110 }}>
+                    <Tooltip title={<span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><CompanyLogo name={c.name} logoUrl={logoMap[c.name]} size={16} />{c.name}</span>}>
+                      {c.name}
+                    </Tooltip>
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody>
               {(group.features || []).map((row, i) => (
                 <tr key={i}>
-                  <td style={{ fontWeight: 500, fontSize: '0.85rem' }}>
+                  <td style={{ fontWeight: 500, fontSize: '0.85rem', whiteSpace: 'nowrap' }}>
                     {row.url ? (
-                      <a href={row.url} target="_blank" rel="noopener noreferrer" style={{
-                        color: 'var(--navy)', textDecoration: 'none', borderBottom: '1px dashed var(--gray-400)',
-                      }} title={row.url}>
-                        {row.title || (row.feature?.length > 60 ? row.feature.slice(0, 60) + '...' : row.feature)}
+                      <Tooltip title={row.url}>
+                      <a href={row.url} target="_blank" rel="noopener noreferrer"
+                        className="feature-link"
+                        style={{
+                          color: 'var(--azure)', textDecoration: 'none',
+                          display: 'inline-flex', alignItems: 'center', gap: 5,
+                          transition: 'color 0.15s ease',
+                        }}
+                      >
+                        <span style={{ borderBottom: '1px dashed var(--gray-400)' }}>
+                          {row.title || (row.feature?.length > 60 ? row.feature.slice(0, 60) + '...' : row.feature)}
+                        </span>
+                        <ExternalLink size={12} style={{ flexShrink: 0, opacity: 0.5 }} />
                       </a>
+                      </Tooltip>
                     ) : (
-                      row.title || (row.feature?.length > 60 ? row.feature.slice(0, 60) + '...' : row.feature)
+                      <span style={{ color: 'var(--navy)' }}>
+                        {row.title || (row.feature?.length > 60 ? row.feature.slice(0, 60) + '...' : row.feature)}
+                      </span>
                     )}
                   </td>
                   {competitors.map(c => {
@@ -164,9 +341,7 @@ export default function FeatureMatrix({ data, meta }) {
                       <td key={c.id} style={{ textAlign: 'center' }}>
                         <ClassBadge
                           classification={comp?.classification || 'none'}
-                          reason={comp?.classification !== 'none' ? comp?.reason : null}
-                          matchedFeature={comp?.classification !== 'none' ? comp?.matched_feature : null}
-                          matchedUrl={comp?.classification !== 'none' ? comp?.matched_url : null}
+                          onClick={() => openDrawer(row, c.id)}
                         />
                       </td>
                     );
@@ -189,6 +364,16 @@ export default function FeatureMatrix({ data, meta }) {
           </span>
         ))}
       </div>
+
+      {drawer && (
+        <FeatureDrawer
+          feature={drawer.feature}
+          competitors={competitors}
+          logoMap={logoMap}
+          highlightCompetitorId={drawer.highlightCompetitorId}
+          onClose={() => setDrawer(null)}
+        />
+      )}
     </div>
   );
 }

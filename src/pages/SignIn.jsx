@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Card, Form, Input, Button, Alert } from 'antd';
 import { authApi } from '../services/api';
 
@@ -7,6 +7,8 @@ export default function SignIn({ onLogin }) {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [otpDigits, setOtpDigits] = useState(['', '', '', '', '', '']);
+  const inputRefs = useRef([]);
 
   const handleSendOtp = async ({ email: formEmail }) => {
     setLoading(true);
@@ -22,7 +24,7 @@ export default function SignIn({ onLogin }) {
     }
   };
 
-  const handleVerifyOtp = async ({ otp }) => {
+  const handleVerifyOtp = async (otp) => {
     setLoading(true);
     setError('');
     try {
@@ -34,6 +36,43 @@ export default function SignIn({ onLogin }) {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleOtpChange = (index, value) => {
+    // Only allow digits
+    const digit = value.replace(/\D/g, '').slice(-1);
+    const newDigits = [...otpDigits];
+    newDigits[index] = digit;
+    setOtpDigits(newDigits);
+
+    // Auto-advance to next box
+    if (digit && index < 5) {
+      inputRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const handleOtpKeyDown = (index, e) => {
+    if (e.key === 'Backspace' && !otpDigits[index] && index > 0) {
+      inputRefs.current[index - 1]?.focus();
+    }
+    if (e.key === 'Enter') {
+      const otp = otpDigits.join('');
+      if (otp.length === 6) handleVerifyOtp(otp);
+    }
+  };
+
+  const handleOtpPaste = (e) => {
+    e.preventDefault();
+    const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
+    if (!pasted) return;
+    const newDigits = [...otpDigits];
+    for (let i = 0; i < 6; i++) {
+      newDigits[i] = pasted[i] || '';
+    }
+    setOtpDigits(newDigits);
+    // Focus last filled box or the next empty one
+    const focusIndex = Math.min(pasted.length, 5);
+    inputRefs.current[focusIndex]?.focus();
   };
 
   return (
@@ -56,10 +95,11 @@ export default function SignIn({ onLogin }) {
             </Button>
           </Form>
         ) : (
-          <Form onFinish={handleVerifyOtp} layout="vertical">
-            <Form.Item label="Email">
-              <span style={{ color: '#C9A84C' }}>{email}</span>
-            </Form.Item>
+          <div>
+            <div style={{ marginBottom: 16 }}>
+              <span style={{ fontSize: 13, opacity: 0.6 }}>Email</span>
+              <div style={{ color: '#C9A84C' }}>{email}</div>
+            </div>
 
             <Alert
               type="success"
@@ -68,22 +108,58 @@ export default function SignIn({ onLogin }) {
               showIcon
             />
 
-            <Form.Item label="Enter 6-digit OTP" name="otp" rules={[{ required: true }]}>
-              <Input placeholder="123456" maxLength={6} size="large" />
-            </Form.Item>
+            <div style={{ marginBottom: 8 }}>
+              <span style={{ fontSize: 13, opacity: 0.6 }}>Enter 6-digit OTP</span>
+            </div>
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'center', marginBottom: 24 }}>
+              {otpDigits.map((digit, i) => (
+                <input
+                  key={i}
+                  ref={el => inputRefs.current[i] = el}
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={1}
+                  value={digit}
+                  onChange={e => handleOtpChange(i, e.target.value)}
+                  onKeyDown={e => handleOtpKeyDown(i, e)}
+                  onPaste={handleOtpPaste}
+                  style={{
+                    width: 48,
+                    height: 56,
+                    textAlign: 'center',
+                    fontSize: 24,
+                    fontWeight: 700,
+                    border: '2px solid #d9d9d9',
+                    borderRadius: 8,
+                    outline: 'none',
+                    transition: 'border-color 0.2s',
+                    caretColor: '#C9A84C',
+                  }}
+                  onFocus={e => e.target.style.borderColor = '#C9A84C'}
+                  onBlur={e => e.target.style.borderColor = '#d9d9d9'}
+                />
+              ))}
+            </div>
 
-            <Button type="primary" htmlType="submit" loading={loading} block size="large">
+            <Button
+              type="primary"
+              loading={loading}
+              block
+              size="large"
+              disabled={otpDigits.join('').length !== 6}
+              onClick={() => handleVerifyOtp(otpDigits.join(''))}
+            >
               Verify OTP
             </Button>
             <Button
               type="text"
               block
               style={{ marginTop: 8 }}
-              onClick={() => setStep('email')}
+              onClick={() => { setStep('email'); setOtpDigits(['', '', '', '', '', '']); }}
             >
               Back
             </Button>
-          </Form>
+          </div>
         )}
       </Card>
     </div>
