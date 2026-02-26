@@ -41,8 +41,9 @@ function ReportLanding({ data, onEnter }) {
   );
 }
 
-export default function Report() {
-  const { id: projectId } = useParams();
+export default function Report({ resolvedProjectId }) {
+  const { id: paramId } = useParams();
+  const projectId = paramId || resolvedProjectId;
   const navigate = useNavigate();
   const printRef = useRef(null);
 

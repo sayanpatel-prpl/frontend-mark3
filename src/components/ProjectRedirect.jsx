@@ -1,6 +1,6 @@
-import { Navigate } from 'react-router-dom';
 import { Spin } from 'antd';
 import useProject from '../hooks/useProject';
+import Report from '../pages/Report';
 
 export default function ProjectRedirect() {
   const { projectId, loading, error } = useProject();
@@ -24,5 +24,5 @@ export default function ProjectRedirect() {
     );
   }
 
-  return <Navigate to={`/projects/${projectId}/report`} replace />;
+  return <Report resolvedProjectId={projectId} />;
 }

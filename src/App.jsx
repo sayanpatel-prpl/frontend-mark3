@@ -413,9 +413,9 @@ function App() {
           <Route path="/faq-intel" element={<FAQIntelligencePage />} />
           <Route path="/news-momentum" element={<NewsMomentumPage />} />
 
-          {/* Legacy routes kept working */}
-          <Route path="/projects/:id/report" element={<Report />} />
-          <Route path="/projects/:id/feature-report" element={<FeatureReport />} />
+          {/* Legacy routes — resolve correct project ID */}
+          <Route path="/projects/:id/report" element={<ProjectRedirect />} />
+          <Route path="/projects/:id/feature-report" element={<Navigate to="/feature-matrix" replace />} />
 
           {/* Legacy redirects */}
           <Route path="/reports" element={<Navigate to="/review-report" replace />} />
