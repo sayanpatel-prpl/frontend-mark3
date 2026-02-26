@@ -28,11 +28,11 @@ export default function QuarterlyTrendChart({ quarterlyTrend }) {
   const plotW = W - PAD.left - PAD.right;
   const plotH = H - PAD.top - PAD.bottom;
 
-  let allVals = visibleSeries.flatMap((s) => s.points.map((p) => p.val));
-  if (allVals.length === 0) allVals = [0, 5];
-  const yMin = Math.max(0, Math.floor(Math.min(...allVals) * 2) / 2 - 0.5);
-  const yMax = Math.min(5, Math.ceil(Math.max(...allVals) * 2) / 2 + 0.5);
-  const yRange = yMax - yMin || 1;
+  // Fixed Y axis: whole numbers 1–5
+  const yMin = 1;
+  const yMax = 5;
+  const yRange = yMax - yMin;
+  const yTicks = [1, 2, 3, 4, 5];
 
   const xScale = (qi) => PAD.left + (qi / (quarters.length - 1)) * plotW;
   const yScale = (val) => PAD.top + plotH - ((val - yMin) / yRange) * plotH;
@@ -43,13 +43,12 @@ export default function QuarterlyTrendChart({ quarterlyTrend }) {
     <div className="card" style={{ padding: '1.5rem', marginBottom: '1.5rem' }}>
       <h3 className="card-title">Quarterly Rating Trend</h3>
       <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', height: 'auto' }}>
-        {Array.from({ length: 5 }, (_, i) => {
-          const val = yMin + (yRange * i) / 4;
+        {yTicks.map((val) => {
           const y = yScale(val);
           return (
-            <g key={i}>
+            <g key={val}>
               <line x1={PAD.left} x2={W - PAD.right} y1={y} y2={y} stroke="var(--gray-200)" strokeWidth={0.5} />
-              <text x={PAD.left - 8} y={y + 4} textAnchor="end" fill="var(--gray-500)" fontSize={10}>{val.toFixed(1)}</text>
+              <text x={PAD.left - 8} y={y + 4} textAnchor="end" fill="var(--gray-500)" fontSize={10}>{val}</text>
             </g>
           );
         })}
@@ -70,7 +69,7 @@ export default function QuarterlyTrendChart({ quarterlyTrend }) {
           const color = colorMap[s.id];
           const pts = s.points;
           if (pts.length < 2) return null;
-          const pathD = pts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${xScale(p.qi)} ${yScale(p.val)}`).join(' ');
+          const pathD = pts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${xScale(p.qi)} ${yScale(Math.round(p.val))}`).join(' ');
           return (
             <path key={s.id} d={pathD} fill="none" stroke={color} strokeWidth={s.isMain ? 2.5 : 1.5} opacity={0.9} />
           );

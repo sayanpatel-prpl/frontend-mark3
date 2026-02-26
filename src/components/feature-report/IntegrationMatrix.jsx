@@ -1,7 +1,15 @@
+import { Tooltip } from 'antd';
+import CompanyLogo from './CompanyLogo';
+
 export default function IntegrationMatrix({ data, meta }) {
   if (!data || data.length === 0) return null;
 
-  const allCompanies = [meta.main_company?.name, ...meta.competitors.map(c => c.name)].filter(Boolean);
+  const allCompanyObjs = [meta.main_company, ...meta.competitors].filter(Boolean);
+  const allCompanies = allCompanyObjs.map(c => c.name);
+  const logoMap = {};
+  for (const c of allCompanyObjs) {
+    logoMap[c.name] = c.logo_url;
+  }
 
   // Detect data shape: new (subcategories) vs old (flat integrations)
   const hasSubcategories = data[0]?.subcategories?.length > 0;
@@ -46,11 +54,11 @@ export default function IntegrationMatrix({ data, meta }) {
                 }}>
                   {sub.subcategory}
                 </div>
-                <IntegrationTable integrations={sub.integrations} allCompanies={allCompanies} />
+                <IntegrationTable integrations={sub.integrations} allCompanies={allCompanies} logoMap={logoMap} />
               </div>
             ))
           ) : (
-            <IntegrationTable integrations={category.integrations} allCompanies={allCompanies} />
+            <IntegrationTable integrations={category.integrations} allCompanies={allCompanies} logoMap={logoMap} />
           )}
         </div>
       ))}
@@ -58,7 +66,7 @@ export default function IntegrationMatrix({ data, meta }) {
   );
 }
 
-function IntegrationTable({ integrations, allCompanies }) {
+function IntegrationTable({ integrations, allCompanies, logoMap }) {
   if (!integrations?.length) return null;
 
   return (
@@ -66,7 +74,13 @@ function IntegrationTable({ integrations, allCompanies }) {
       <thead>
         <tr>
           <th style={{ minWidth: 140 }}>Integration</th>
-          {allCompanies.map(name => <th key={name} style={{ textAlign: 'center', minWidth: 80 }}>{name}</th>)}
+          {allCompanies.map(name => (
+            <th key={name} style={{ textAlign: 'center', minWidth: 80 }}>
+              <Tooltip title={<span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><CompanyLogo name={name} logoUrl={logoMap[name]} size={16} />{name}</span>}>
+                {name}
+              </Tooltip>
+            </th>
+          ))}
         </tr>
       </thead>
       <tbody>
@@ -83,7 +97,7 @@ function IntegrationTable({ integrations, allCompanies }) {
                 return (
                   <td key={name} style={{ textAlign: 'center' }}>
                     {sourceUrl
-                      ? <a href={sourceUrl} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--success)', fontWeight: 700, fontSize: 16, textDecoration: 'none' }} title={sourceUrl}>&#10003;</a>
+                      ? <Tooltip title={sourceUrl}><a href={sourceUrl} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--success)', fontWeight: 700, fontSize: 16, textDecoration: 'none' }}>&#10003;</a></Tooltip>
                       : <span style={{ color: 'var(--success)', fontWeight: 700, fontSize: 16 }}>&#10003;</span>
                     }
                   </td>
@@ -94,8 +108,8 @@ function IntegrationTable({ integrations, allCompanies }) {
                 return (
                   <td key={name} style={{ textAlign: 'center' }}>
                     {sourceUrl
-                      ? <a href={sourceUrl} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--azure)', fontSize: 14, textDecoration: 'none' }} title={sourceUrl}>&#9679;</a>
-                      : <span style={{ color: 'var(--azure)', fontSize: 14 }} title="Known integration (not verified on website)">&#9679;</span>
+                      ? <Tooltip title={sourceUrl}><a href={sourceUrl} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--azure)', fontSize: 14, textDecoration: 'none' }}>&#9679;</a></Tooltip>
+                      : <Tooltip title="Known integration (not verified on website)"><span style={{ color: 'var(--azure)', fontSize: 14 }}>&#9679;</span></Tooltip>
                     }
                   </td>
                 );

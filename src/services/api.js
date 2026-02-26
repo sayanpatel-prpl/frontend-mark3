@@ -98,6 +98,8 @@ export const featureReportApi = {
     request(tenantPath(`/projects/${projectId}/feature-report/generate${refresh ? '?refresh=true' : ''}`), { method: 'POST' }),
   getStatus: (projectId) => request(tenantPath(`/projects/${projectId}/feature-report/status`)),
   getData: (projectId) => request(tenantPath(`/projects/${projectId}/feature-report/data`)),
+  regenerateSection: (projectId) =>
+    request(tenantPath(`/projects/${projectId}/feature-report/regenerate-section`), { method: 'POST' }),
 };
 
 export const reportApi = {

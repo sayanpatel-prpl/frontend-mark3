@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
-import { Layout, Menu, Dropdown, Spin, theme } from 'antd';
-import { FileText, LayoutGrid, Building2, FolderKanban, Users, LogOut, Shield, Sun, Moon, ChevronLeft, ChevronRight, Settings } from 'lucide-react';
+import { Layout, Dropdown, Spin, theme } from 'antd';
+import { FileText, LayoutGrid, Scale, Plug, Award, MessageCircleQuestion, Newspaper, Building2, FolderKanban, Users, LogOut, Shield, Sun, Moon, ChevronLeft, ChevronRight, Settings } from 'lucide-react';
 import { useTheme } from './contexts/ThemeContext';
 import SignIn from './pages/SignIn';
 import Companies from './pages/Companies';
@@ -9,8 +9,14 @@ import Projects from './pages/Projects';
 import Report from './pages/Report';
 import FeatureReport from './pages/FeatureReport';
 import UserManagement from './pages/UserManagement';
-import ReportProjectList from './pages/ReportProjectList';
+import ProjectRedirect from './components/ProjectRedirect';
+import ClaimsAuditPage from './pages/ClaimsAuditPage';
+import IntegrationCoveragePage from './pages/IntegrationCoveragePage';
+import CustomerRecognitionPage from './pages/CustomerRecognitionPage';
+import FAQIntelligencePage from './pages/FAQIntelligencePage';
+import NewsMomentumPage from './pages/NewsMomentumPage';
 import TenantSelector from './components/TenantSelector';
+import SortableSidebar from './components/SortableSidebar';
 
 const { Sider, Content } = Layout;
 
@@ -27,23 +33,39 @@ function getTierLabel(tier) {
   return 'User';
 }
 
-function getSidebarItems(user) {
-  const items = [
-    { key: '/reports', icon: <FileText size={16} />, label: 'Review Intelligence' },
-    { key: '/feature-reports', icon: <LayoutGrid size={16} />, label: 'Feature Listing' },
+function getSidebarItems() {
+  return [
+    { key: '/review-report', icon: <FileText size={16} />, label: 'Review Intelligence' },
+    { key: '/feature-matrix', icon: <LayoutGrid size={16} />, label: 'Feature Matrix' },
+    { key: '/claims-audit', icon: <Scale size={16} />, label: 'Claims Audit' },
+    { key: '/integrations', icon: <Plug size={16} />, label: 'Integration Coverage' },
+    { key: '/social-proof', icon: <Award size={16} />, label: 'Customer Recognition' },
+    { key: '/faq-intel', icon: <MessageCircleQuestion size={16} />, label: 'FAQ Intelligence' },
+    { key: '/news-momentum', icon: <Newspaper size={16} />, label: 'News & Momentum' },
   ];
-
-  if (user?.tier === 'admin' || user?.tier === 'kompete') {
-    items.push({ key: '/users', icon: <Users size={16} />, label: 'User Management' });
-  }
-
-  return items;
 }
 
+function getPinnedItems(user) {
+  if (user?.tier === 'admin' || user?.tier === 'kompete') {
+    return [{ key: '/users', icon: <Users size={16} />, label: 'User Management' }];
+  }
+  return [];
+}
+
+const REPORT_PAGE_ROUTES = [
+  '/review-report', '/feature-matrix', '/claims-audit', '/integrations',
+  '/social-proof', '/faq-intel', '/news-momentum',
+];
+
 function getSelectedKeys(pathname) {
-  if (/\/projects\/[^/]+\/report$/.test(pathname)) return ['/reports'];
-  if (/\/projects\/[^/]+\/feature-report$/.test(pathname)) return ['/feature-reports'];
+  if (/\/projects\/[^/]+\/report$/.test(pathname)) return ['/review-report'];
+  if (/\/projects\/[^/]+\/feature-report$/.test(pathname)) return ['/feature-matrix'];
   return [pathname];
+}
+
+function isFullWidthPage(pathname) {
+  if (/\/projects\/[^/]+\/(report|feature-report)$/.test(pathname)) return true;
+  return REPORT_PAGE_ROUTES.some((r) => pathname === r);
 }
 
 function AppLayout({ user, activeTenantId, onTenantChange, onLogout, children }) {
@@ -55,7 +77,7 @@ function AppLayout({ user, activeTenantId, onTenantChange, onLogout, children })
 
   const siderWidth = 260;
   const collapsedWidth = 72;
-  const isReportPage = /\/projects\/[^/]+\/(report|feature-report)$/.test(location.pathname);
+  const fullWidth = isFullWidthPage(location.pathname);
 
   const handleLogout = () => {
     localStorage.removeItem('user');
@@ -180,13 +202,14 @@ function AppLayout({ user, activeTenantId, onTenantChange, onLogout, children })
             <TenantSelector activeTenantId={activeTenantId} onTenantChange={onTenantChange} />
           )}
 
-          {/* Main nav */}
-          <Menu
-            mode="inline"
+          {/* Main nav — draggable sidebar */}
+          <SortableSidebar
+            items={getSidebarItems()}
+            pinnedItems={getPinnedItems(user)}
+            userId={user.id}
+            collapsed={collapsed}
             selectedKeys={getSelectedKeys(location.pathname)}
-            onClick={({ key }) => navigate(key)}
-            items={getSidebarItems(user)}
-            style={{ background: 'transparent', borderRight: 'none', flex: 1 }}
+            onNavigate={(key) => navigate(key)}
           />
 
           {/* Admin Dashboard hover menu (kompete only) */}
@@ -272,7 +295,7 @@ function AppLayout({ user, activeTenantId, onTenantChange, onLogout, children })
         </div>
       </Sider>
       <Layout style={{ marginLeft: currentWidth, transition: 'margin-left 0.2s' }}>
-        <Content style={{ padding: isReportPage ? 0 : 32, maxWidth: isReportPage ? '100%' : 1400, margin: '0 auto', width: '100%' }}>
+        <Content style={{ padding: fullWidth ? 0 : 32, maxWidth: fullWidth ? '100%' : 1400, margin: '0 auto', width: '100%' }}>
           {children}
         </Content>
       </Layout>
@@ -381,10 +404,23 @@ function App() {
     <BrowserRouter>
       <AppLayout user={user} activeTenantId={activeTenantId} onTenantChange={handleTenantChange} onLogout={() => { setUser(null); setActiveTenantId(null); }}>
         <Routes>
-          <Route path="/reports" element={<ReportProjectList reportType="review" />} />
-          <Route path="/feature-reports" element={<ReportProjectList reportType="feature" />} />
+          {/* New direct-navigation routes */}
+          <Route path="/review-report" element={<ProjectRedirect />} />
+          <Route path="/feature-matrix" element={<FeatureReport />} />
+          <Route path="/claims-audit" element={<ClaimsAuditPage />} />
+          <Route path="/integrations" element={<IntegrationCoveragePage />} />
+          <Route path="/social-proof" element={<CustomerRecognitionPage />} />
+          <Route path="/faq-intel" element={<FAQIntelligencePage />} />
+          <Route path="/news-momentum" element={<NewsMomentumPage />} />
+
+          {/* Legacy routes kept working */}
           <Route path="/projects/:id/report" element={<Report />} />
           <Route path="/projects/:id/feature-report" element={<FeatureReport />} />
+
+          {/* Legacy redirects */}
+          <Route path="/reports" element={<Navigate to="/review-report" replace />} />
+          <Route path="/feature-reports" element={<Navigate to="/feature-matrix" replace />} />
+
           {(user.tier === 'admin' || user.tier === 'kompete') && (
             <Route path="/users" element={<UserManagement />} />
           )}
@@ -394,7 +430,7 @@ function App() {
               <Route path="/admin/projects" element={<Projects />} />
             </>
           )}
-          <Route path="*" element={<Navigate to="/reports" replace />} />
+          <Route path="*" element={<Navigate to="/review-report" replace />} />
         </Routes>
       </AppLayout>
     </BrowserRouter>

@@ -18,8 +18,9 @@
     padding: 0 !important;
   }
 
-  /* Show all sections */
+  /* Show all sections (including hidden tabs for full PDF) */
   .section { display: block !important; }
+  .tab-section-hidden { display: block !important; }
 
   /* Expand all collapsibles */
   .collapsible-content {
