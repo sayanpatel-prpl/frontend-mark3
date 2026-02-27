@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { Layout, Dropdown, Spin, theme } from 'antd';
-import { FileText, LayoutGrid, Scale, Plug, Award, MessageCircleQuestion, Newspaper, Building2, FolderKanban, Users, LogOut, Shield, Sun, Moon, ChevronLeft, ChevronRight, Settings } from 'lucide-react';
+import { FileText, LayoutGrid, Scale, Plug, Award, MessageCircleQuestion, Newspaper, Building2, FolderKanban, Home, Users, LogOut, Shield, Sun, Moon, ChevronLeft, ChevronRight, Settings } from 'lucide-react';
 import { useTheme } from './contexts/ThemeContext';
 import SignIn from './pages/SignIn';
 import Companies from './pages/Companies';
+import Tenants from './pages/Tenants';
 import Projects from './pages/Projects';
 import Report from './pages/Report';
 import FeatureReport from './pages/FeatureReport';
@@ -21,15 +22,17 @@ import SortableSidebar from './components/SortableSidebar';
 const { Sider, Content } = Layout;
 
 function computeTier(user) {
+  // If backend already provided a tier (from login), use it
+  if (user.tier) return user.tier;
   const domain = user.email?.split('@')[1];
-  if (domain === 'gmail.com') return 'kompete';
-  if (user.role === 'admin') return 'admin';
+  if (domain === 'gmail.com' && user.role === 'admin') return 'kompete';
   return user.role || 'user';
 }
 
 function getTierLabel(tier) {
   if (tier === 'kompete') return 'Kompete Admin';
   if (tier === 'admin') return 'Company Admin';
+  if (tier === 'executive') return 'Executive';
   return 'User';
 }
 
@@ -114,6 +117,12 @@ function AppLayout({ user, activeTenantId, onTenantChange, onLogout, children })
         icon: <Building2 size={14} />,
         label: 'Companies',
         onClick: () => navigate('/admin/companies'),
+      },
+      {
+        key: '/admin/tenants',
+        icon: <Home size={14} />,
+        label: 'Tenants',
+        onClick: () => navigate('/admin/tenants'),
       },
       {
         key: '/admin/projects',
@@ -427,6 +436,7 @@ function App() {
           {user.tier === 'kompete' && (
             <>
               <Route path="/admin/companies" element={<Companies />} />
+              <Route path="/admin/tenants" element={<Tenants />} />
               <Route path="/admin/projects" element={<Projects />} />
             </>
           )}
