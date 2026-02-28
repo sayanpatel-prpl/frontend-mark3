@@ -29,12 +29,26 @@ export default function BattlecardHeader({ comp }) {
             </div>
           </div>
         </div>
+        <div style={{ textAlign: 'right' }}>
+          <div style={{ fontSize: '2.5rem', fontWeight: 700, color: 'var(--navy)', lineHeight: 1 }}>
+            {stats.avgRating}
+          </div>
+          <div style={{ color: 'var(--warning)', fontSize: '1rem', marginTop: '0.25rem' }}>
+            {'★'.repeat(Math.round(stats.avgRating || 0))}{'☆'.repeat(5 - Math.round(stats.avgRating || 0))}
+          </div>
+        </div>
       </div>
 
       {threat?.execSummary && (
         <div className="exec-summary">
           <div className="exec-summary-label">Executive Summary</div>
-          <p>{threat.execSummary}</p>
+          <ul style={{ margin: 0, paddingLeft: '1.25rem' }}>
+            {threat.execSummary.split(/(?<=[.!?])\s+/).filter(s => s.trim()).map((sentence, i) => (
+              <li key={i} style={{ fontSize: '0.9375rem', lineHeight: 1.7, color: 'var(--gray-700)', marginBottom: '0.25rem' }}>
+                {sentence.trim()}
+              </li>
+            ))}
+          </ul>
         </div>
       )}
 
@@ -44,14 +58,10 @@ export default function BattlecardHeader({ comp }) {
         </div>
       )}
 
-      <div className="battlecard-stat-line">
+      <div className="battlecard-stat-line" style={{ gridTemplateColumns: 'repeat(5, 1fr)' }}>
         <div className="battlecard-stat">
           <div className="battlecard-stat-value">{stats.reviewCount?.toLocaleString()}</div>
           <div className="battlecard-stat-label">Reviews</div>
-        </div>
-        <div className="battlecard-stat">
-          <div className="battlecard-stat-value">{stats.avgRating}</div>
-          <div className="battlecard-stat-label">Avg Rating</div>
         </div>
         <div className="battlecard-stat">
           <div className="battlecard-stat-value" style={{ color: 'var(--success)' }}>{stats.positivePercent}%</div>

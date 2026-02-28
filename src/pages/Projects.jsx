@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Table, Button, Modal, Form, Input, Select, Tag, Progress, Space, Card as AntCard, Popconfirm, message, theme } from 'antd';
 import { Plus, FileText, LayoutGrid } from 'lucide-react';
-import { projectApi, companyApi } from '../services/api';
+import { projectApi, companyApi, reportApi, featureReportApi } from '../services/api';
 
 const statusMap = {
   idle: { color: 'default', label: 'Idle' },
@@ -74,6 +74,65 @@ function CompanyCard({ projectId, companyId, companyName, isMain, progress, onGe
   );
 }
 
+const versionStatusMap = {
+  generating: { color: 'processing', label: 'Generating' },
+  classifying: { color: 'orange', label: 'Classifying' },
+  comparing: { color: 'orange', label: 'Comparing' },
+  success: { color: 'green', label: 'Success' },
+  failed: { color: 'red', label: 'Failed' },
+};
+
+function ReportVersionsTable({ versions, loading, onActivate, activatingId }) {
+  if (!versions?.length && !loading) return <div style={{ color: '#999', fontSize: 13 }}>No versions yet</div>;
+
+  const cols = [
+    { title: 'ID', dataIndex: 'id', key: 'id', width: 60 },
+    {
+      title: 'Date', dataIndex: 'created_at', key: 'date', width: 170,
+      render: (v) => new Date(v).toLocaleString(),
+    },
+    {
+      title: 'Status', dataIndex: 'status', key: 'status', width: 120,
+      render: (status) => {
+        const info = versionStatusMap[status] || { color: 'default', label: status };
+        return <Tag color={info.color}>{info.label}</Tag>;
+      },
+    },
+    {
+      title: 'Active', dataIndex: 'is_active', key: 'active', width: 80,
+      render: (active) => active ? <Tag color="green">Active</Tag> : '—',
+    },
+    {
+      title: '', key: 'actions', width: 100,
+      render: (_, record) => (
+        record.status === 'success' && !record.is_active ? (
+          <Button
+            size="small"
+            type="primary"
+            ghost
+            loading={activatingId === record.id}
+            onClick={(e) => { e.stopPropagation(); onActivate(record.id); }}
+          >
+            Activate
+          </Button>
+        ) : null
+      ),
+    },
+  ];
+
+  return (
+    <Table
+      columns={cols}
+      dataSource={versions}
+      rowKey="id"
+      loading={loading}
+      size="small"
+      pagination={false}
+      style={{ marginBottom: 8 }}
+    />
+  );
+}
+
 export default function Projects() {
   const navigate = useNavigate();
   const { token } = theme.useToken();
@@ -85,8 +144,45 @@ export default function Projects() {
   const [expandedProject, setExpandedProject] = useState(null);
   const [projectProgress, setProjectProgress] = useState({});
   const [form] = Form.useForm();
+  const [reviewVersions, setReviewVersions] = useState({});
+  const [featureVersions, setFeatureVersions] = useState({});
+  const [versionsLoading, setVersionsLoading] = useState(false);
+  const [activatingId, setActivatingId] = useState(null);
   const pollRef = useRef(null);
   const progressPollRef = useRef(null);
+
+  const fetchVersions = async (projectId) => {
+    setVersionsLoading(true);
+    try {
+      const [rv, fv] = await Promise.all([
+        reportApi.getVersions(projectId),
+        featureReportApi.getVersions(projectId),
+      ]);
+      setReviewVersions(prev => ({ ...prev, [projectId]: rv }));
+      setFeatureVersions(prev => ({ ...prev, [projectId]: fv }));
+    } catch (_) {}
+    setVersionsLoading(false);
+  };
+
+  const handleActivateReviewVersion = async (projectId, versionId) => {
+    setActivatingId(versionId);
+    try {
+      await reportApi.activateVersion(projectId, versionId);
+      message.success('Review report version activated');
+      fetchVersions(projectId);
+    } catch (err) { message.error(err.message); }
+    setActivatingId(null);
+  };
+
+  const handleActivateFeatureVersion = async (projectId, versionId) => {
+    setActivatingId(versionId);
+    try {
+      await featureReportApi.activateVersion(projectId, versionId);
+      message.success('Feature report version activated');
+      fetchVersions(projectId);
+    } catch (err) { message.error(err.message); }
+    setActivatingId(null);
+  };
 
   const fetchProjects = async () => {
     try {
@@ -126,6 +222,7 @@ export default function Projects() {
       .then(data => {
         setExpandedProject(data);
         fetchProjectProgress(expandedKey);
+        fetchVersions(expandedKey);
       })
       .catch(err => message.error(err.message));
   }, [expandedKey]);
@@ -289,6 +386,26 @@ export default function Projects() {
                     ))}
                   </>
                 )}
+
+                <h4 style={{ margin: '24px 0 12px' }}>Report Versions</h4>
+                <div style={{ marginBottom: 16 }}>
+                  <h5 style={{ margin: '0 0 8px', fontWeight: 500 }}>Review Report</h5>
+                  <ReportVersionsTable
+                    versions={reviewVersions[record.id]}
+                    loading={versionsLoading}
+                    onActivate={(versionId) => handleActivateReviewVersion(record.id, versionId)}
+                    activatingId={activatingId}
+                  />
+                </div>
+                <div>
+                  <h5 style={{ margin: '0 0 8px', fontWeight: 500 }}>Feature Report</h5>
+                  <ReportVersionsTable
+                    versions={featureVersions[record.id]}
+                    loading={versionsLoading}
+                    onActivate={(versionId) => handleActivateFeatureVersion(record.id, versionId)}
+                    activatingId={activatingId}
+                  />
+                </div>
               </div>
             );
           },

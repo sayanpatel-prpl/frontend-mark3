@@ -231,8 +231,11 @@ export default function Report({ resolvedProjectId }) {
             {(() => {
               try {
                 const u = JSON.parse(localStorage.getItem('user') || '{}');
+                const tier = u.tier;
+                // Hide regenerate for executive users
+                if (tier === 'executive') return null;
                 const domain = u.email?.split('@')[1];
-                if (domain === 'gmail.com') return (
+                if (domain === 'gmail.com' || tier === 'admin' || tier === 'kompete') return (
                   <button
                     className="btn-secondary"
                     onClick={handleRefresh}

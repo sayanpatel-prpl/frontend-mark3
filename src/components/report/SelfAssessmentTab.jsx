@@ -3,6 +3,11 @@ import { reportApi } from '../../services/api';
 import Spinner from './ui/Spinner';
 import SelfAssessmentHeader from './SelfAssessmentHeader';
 import SelfAssessmentBody from './SelfAssessmentBody';
+import SentimentBreakdown from './SentimentBreakdown';
+import ComplaintChips from './ComplaintChips';
+import TrendAnalysis from './TrendAnalysis';
+import PricingIntelligence from './PricingIntelligence';
+import WorstReviews from './WorstReviews';
 
 export default function SelfAssessmentTab({ projectId, cache, onCache }) {
   const [data, setData] = useState(cache || null);
@@ -48,10 +53,23 @@ export default function SelfAssessmentTab({ projectId, cache, onCache }) {
 
   if (!data) return null;
 
+  // Build a pseudo-comp object for reusing battlecard components
+  const selfComp = {
+    stats: data.mainCompanyStats,
+    trendAnalysis: data.trendAnalysis,
+    pricingStats: data.pricingStats,
+    damagingReviews: data.damagingReviews,
+  };
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <SelfAssessmentHeader mainCompanyStats={data.mainCompanyStats} project={data.project} />
       <SelfAssessmentBody selfAssessment={data.selfAssessment} />
+      <SentimentBreakdown stats={data.mainCompanyStats} />
+      {data.complaintChips && <ComplaintChips chips={data.complaintChips} />}
+      {data.trendAnalysis && <TrendAnalysis comp={selfComp} />}
+      {data.pricingStats && <PricingIntelligence comp={selfComp} battlecard={{ pricingAdv: {} }} />}
+      {data.damagingReviews && <WorstReviews comp={selfComp} />}
     </div>
   );
 }

@@ -1,13 +1,10 @@
-import { useState, useCallback, useMemo } from 'react';
-import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
-import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
-import { GripVertical } from 'lucide-react';
+import { useState } from 'react';
+import { ChevronDown, ChevronRight } from 'lucide-react';
 import { theme } from 'antd';
 
-const STORAGE_PREFIX = 'kompete-sidebar-order-';
+const STORAGE_PREFIX = 'kompete-sidebar-sections-';
 
-function getStoredOrder(userId) {
+function getStoredSections(userId) {
   try {
     const raw = localStorage.getItem(`${STORAGE_PREFIX}${userId}`);
     return raw ? JSON.parse(raw) : null;
@@ -16,138 +13,148 @@ function getStoredOrder(userId) {
   }
 }
 
-function setStoredOrder(userId, order) {
-  localStorage.setItem(`${STORAGE_PREFIX}${userId}`, JSON.stringify(order));
+function setStoredSections(userId, sections) {
+  localStorage.setItem(`${STORAGE_PREFIX}${userId}`, JSON.stringify(sections));
 }
 
-function reconcileOrder(storedOrder, items) {
-  const itemKeys = items.map((i) => i.key);
-  const filtered = storedOrder.filter((k) => itemKeys.includes(k));
-  const missing = itemKeys.filter((k) => !filtered.includes(k));
-  return [...filtered, ...missing];
+function ComingSoonTag() {
+  return (
+    <span style={{
+      fontSize: 9,
+      fontWeight: 700,
+      textTransform: 'uppercase',
+      letterSpacing: '0.5px',
+      background: '#FEE2E2',
+      color: '#DC2626',
+      padding: '1px 6px',
+      borderRadius: 4,
+      marginLeft: 'auto',
+      flexShrink: 0,
+      lineHeight: '16px',
+    }}>
+      Soon
+    </span>
+  );
 }
 
-function SortableItem({ item, isActive, collapsed, onClick }) {
+function SidebarItem({ item, isActive, collapsed, onClick }) {
   const { token } = theme.useToken();
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.key });
+  const disabled = item.comingSoon;
 
   const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
     display: 'flex',
     alignItems: 'center',
-    gap: 10,
-    padding: collapsed ? '10px 0' : '10px 16px',
-    margin: collapsed ? '2px 8px' : '2px 8px',
+    gap: 8,
+    padding: collapsed ? '7px 0' : '7px 16px 7px 40px',
+    margin: '1px 8px',
     borderRadius: 6,
-    cursor: 'pointer',
-    color: isActive ? token.colorPrimary : token.colorTextSecondary,
-    background: isActive ? token.colorPrimaryBg : 'transparent',
+    cursor: disabled ? 'default' : 'pointer',
+    color: disabled ? token.colorTextQuaternary : isActive ? token.colorPrimary : token.colorTextSecondary,
+    background: isActive && !disabled ? token.colorPrimaryBg : 'transparent',
     fontWeight: isActive ? 600 : 400,
-    fontSize: 14,
+    fontSize: 13,
     justifyContent: collapsed ? 'center' : 'flex-start',
     userSelect: 'none',
+    opacity: disabled ? 0.6 : 1,
+    transition: 'background 0.15s',
   };
 
   return (
-    <div ref={setNodeRef} style={style} onClick={() => onClick(item.key)}
-      onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = token.colorBgTextHover; }}
-      onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = 'transparent'; }}
+    <div
+      style={style}
+      onClick={() => !disabled && onClick(item.key)}
+      onMouseEnter={e => { if (!isActive && !disabled) e.currentTarget.style.background = token.colorBgTextHover; }}
+      onMouseLeave={e => { if (!isActive && !disabled) e.currentTarget.style.background = 'transparent'; }}
     >
-      {!collapsed && (
-        <span
-          {...attributes}
-          {...listeners}
-          style={{ cursor: 'grab', display: 'flex', alignItems: 'center', color: token.colorTextQuaternary, flexShrink: 0 }}
-          onClick={(e) => e.stopPropagation()}
-        >
-          <GripVertical size={14} />
-        </span>
-      )}
       <span style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>{item.icon}</span>
-      {!collapsed && <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.label}</span>}
+      {!collapsed && (
+        <>
+          <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.label}</span>
+          {disabled && <ComingSoonTag />}
+        </>
+      )}
     </div>
   );
 }
 
-function PinnedItem({ item, isActive, collapsed, onClick }) {
+function SectionHeader({ label, collapsed, isOpen, onToggle }) {
   const { token } = theme.useToken();
 
-  const style = {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 10,
-    padding: collapsed ? '10px 0' : '10px 16px',
-    margin: collapsed ? '2px 8px' : '2px 8px',
-    borderRadius: 6,
-    cursor: 'pointer',
-    color: isActive ? token.colorPrimary : token.colorTextSecondary,
-    background: isActive ? token.colorPrimaryBg : 'transparent',
-    fontWeight: isActive ? 600 : 400,
-    fontSize: 14,
-    justifyContent: collapsed ? 'center' : 'flex-start',
-  };
+  if (collapsed) return null;
 
   return (
-    <div style={style} onClick={() => onClick(item.key)}
-      onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = token.colorBgTextHover; }}
-      onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = 'transparent'; }}
+    <div
+      onClick={onToggle}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 6,
+        padding: '10px 16px 4px 16px',
+        cursor: 'pointer',
+        userSelect: 'none',
+      }}
     >
-      {!collapsed && <span style={{ width: 14, flexShrink: 0 }} />}
-      <span style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>{item.icon}</span>
-      {!collapsed && <span>{item.label}</span>}
+      <span style={{ display: 'flex', alignItems: 'center', color: token.colorTextQuaternary }}>
+        {isOpen ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+      </span>
+      <span style={{
+        fontSize: 10,
+        fontWeight: 700,
+        textTransform: 'uppercase',
+        letterSpacing: '0.08em',
+        color: token.colorTextTertiary,
+      }}>
+        {label}
+      </span>
     </div>
   );
 }
 
-export default function SortableSidebar({ items, pinnedItems = [], userId, collapsed, selectedKeys, onNavigate }) {
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
-
-  const sortableKeys = useMemo(() => items.map((i) => i.key), [items]);
-
-  const [order, setOrder] = useState(() => {
-    const stored = getStoredOrder(userId);
-    if (stored) return reconcileOrder(stored, items);
-    return sortableKeys;
+export default function SortableSidebar({ sections, pinnedItems = [], userId, collapsed, selectedKeys, onNavigate }) {
+  const [openSections, setOpenSections] = useState(() => {
+    const stored = getStoredSections(userId);
+    if (stored) return stored;
+    // Default all sections open
+    const defaults = {};
+    (sections || []).forEach(s => { defaults[s.key] = true; });
+    return defaults;
   });
 
-  const orderedItems = useMemo(() => {
-    const reconciled = reconcileOrder(order, items);
-    const itemMap = Object.fromEntries(items.map((i) => [i.key, i]));
-    return reconciled.map((k) => itemMap[k]).filter(Boolean);
-  }, [order, items]);
-
-  const handleDragEnd = useCallback((event) => {
-    const { active, over } = event;
-    if (!over || active.id === over.id) return;
-
-    setOrder((prev) => {
-      const oldIndex = prev.indexOf(active.id);
-      const newIndex = prev.indexOf(over.id);
-      const next = arrayMove(prev, oldIndex, newIndex);
-      setStoredOrder(userId, next);
+  const toggleSection = (sectionKey) => {
+    setOpenSections(prev => {
+      const next = { ...prev, [sectionKey]: !prev[sectionKey] };
+      setStoredSections(userId, next);
       return next;
     });
-  }, [userId]);
+  };
 
   return (
-    <div style={{ flex: 1, paddingTop: 4 }}>
-      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-        <SortableContext items={orderedItems.map((i) => i.key)} strategy={verticalListSortingStrategy}>
-          {orderedItems.map((item) => (
-            <SortableItem
-              key={item.key}
-              item={item}
-              isActive={selectedKeys.includes(item.key)}
+    <div style={{ flex: 1, paddingTop: 4, overflowY: 'auto' }}>
+      {(sections || []).map((section) => {
+        const isOpen = openSections[section.key] !== false;
+        return (
+          <div key={section.key}>
+            <SectionHeader
+              label={section.label}
               collapsed={collapsed}
-              onClick={onNavigate}
+              isOpen={isOpen}
+              onToggle={() => toggleSection(section.key)}
             />
-          ))}
-        </SortableContext>
-      </DndContext>
+            {(isOpen || collapsed) && (section.items || []).map((item) => (
+              <SidebarItem
+                key={item.key}
+                item={item}
+                isActive={selectedKeys.includes(item.key)}
+                collapsed={collapsed}
+                onClick={onNavigate}
+              />
+            ))}
+          </div>
+        );
+      })}
+
       {pinnedItems.map((item) => (
-        <PinnedItem
+        <SidebarItem
           key={item.key}
           item={item}
           isActive={selectedKeys.includes(item.key)}

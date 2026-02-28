@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { Layout, Dropdown, Spin, theme } from 'antd';
-import { FileText, LayoutGrid, Scale, Plug, Award, MessageCircleQuestion, Newspaper, Building2, FolderKanban, Home, Users, LogOut, Shield, Sun, Moon, ChevronLeft, ChevronRight, Settings } from 'lucide-react';
+import { FileText, LayoutGrid, Scale, Plug, Award, Newspaper, Building2, FolderKanban, Home, Users, LogOut, Shield, Sun, Moon, ChevronLeft, ChevronRight, Settings, Activity, Target, Globe, PenTool, BarChart3, Search, Package, DollarSign, HelpCircle, Swords, Trophy, AlertTriangle, ClipboardCheck, TrendingUp, LineChart, Bell, Sliders, UserCog, CreditCard } from 'lucide-react';
 import { useTheme } from './contexts/ThemeContext';
 import SignIn from './pages/SignIn';
 import Companies from './pages/Companies';
@@ -36,15 +36,103 @@ function getTierLabel(tier) {
   return 'User';
 }
 
-function getSidebarItems() {
+function getSidebarSections() {
   return [
-    { key: '/review-report', icon: <FileText size={16} />, label: 'Review Intelligence' },
-    { key: '/feature-matrix', icon: <LayoutGrid size={16} />, label: 'Feature Matrix' },
-    { key: '/claims-audit', icon: <Scale size={16} />, label: 'Claims Audit' },
-    { key: '/integrations', icon: <Plug size={16} />, label: 'Integration Coverage' },
-    { key: '/social-proof', icon: <Award size={16} />, label: 'Customer Recognition' },
-    { key: '/faq-intel', icon: <MessageCircleQuestion size={16} />, label: 'FAQ Intelligence' },
-    { key: '/news-momentum', icon: <Newspaper size={16} />, label: 'News & Momentum' },
+    {
+      key: 'competitive-feed',
+      label: 'Competitive Feed',
+      items: [
+        { key: '/competitive-feed', icon: <Activity size={16} />, label: 'Live Feed', comingSoon: true },
+      ],
+    },
+    {
+      key: 'competitors',
+      label: 'Competitors',
+      items: [
+        { key: '/competitor-profiles', icon: <Target size={16} />, label: 'Competitor Profiles', comingSoon: true },
+        { key: '/competitor-discovery', icon: <Search size={16} />, label: 'Competitor Discovery', comingSoon: true },
+      ],
+    },
+    {
+      key: 'marketing-intel',
+      label: 'Marketing Intelligence',
+      items: [
+        { key: '/positioning', icon: <PenTool size={16} />, label: 'Positioning & Messaging', comingSoon: true },
+        { key: '/website-traffic', icon: <Globe size={16} />, label: 'Website Traffic & SEO', comingSoon: true },
+        { key: '/content-intel', icon: <FileText size={16} />, label: 'Content & Blog Intelligence', comingSoon: true },
+        { key: '/paid-channels', icon: <BarChart3 size={16} />, label: 'Paid Channels Overview', comingSoon: true },
+        { key: '/aeo', icon: <Search size={16} />, label: 'AEO', comingSoon: true },
+      ],
+    },
+    {
+      key: 'product-intel',
+      label: 'Product Intelligence',
+      items: [
+        { key: '/feature-matrix', icon: <LayoutGrid size={16} />, label: 'Feature Matrix' },
+        { key: '/integrations', icon: <Plug size={16} />, label: 'Integration Coverage' },
+        { key: '/gap-analysis', icon: <Package size={16} />, label: 'Feature & Integration Gap Analysis', comingSoon: true },
+        { key: '/pricing-tracker', icon: <DollarSign size={16} />, label: 'Pricing Tracker', comingSoon: true },
+        { key: '/faq-intel', icon: <HelpCircle size={16} />, label: 'FAQ Intelligence' },
+      ],
+    },
+    {
+      key: 'sales-enablement',
+      label: 'Sales Enablement',
+      items: [
+        { key: '/battle-cards', icon: <Swords size={16} />, label: 'Battle Cards', comingSoon: true },
+        { key: '/competitive-advantages', icon: <Trophy size={16} />, label: 'Competitive Advantages', comingSoon: true },
+        { key: '/claims-comparison', icon: <Scale size={16} />, label: 'Claims Comparison' },
+        { key: '/win-loss', icon: <AlertTriangle size={16} />, label: 'Win/Loss Signals', comingSoon: true },
+      ],
+    },
+    {
+      key: 'review-intel',
+      label: 'Review Intelligence',
+      items: [
+        { key: '/review-report', icon: <FileText size={16} />, label: 'Market Overview' },
+        { key: '/review-breakdown', icon: <ClipboardCheck size={16} />, label: 'Per-Competitor Breakdown', comingSoon: true },
+        { key: '/sentiment-trends', icon: <TrendingUp size={16} />, label: 'Sentiment Trends & NPS', comingSoon: true },
+        { key: '/review-heatmaps', icon: <BarChart3 size={16} />, label: 'Review Heat Maps', comingSoon: true },
+      ],
+    },
+    {
+      key: 'market-signals',
+      label: 'Market Signals',
+      items: [
+        { key: '/news-momentum', icon: <Newspaper size={16} />, label: 'News & Momentum' },
+        { key: '/social-proof', icon: <Award size={16} />, label: 'Customer Recognition' },
+        { key: '/social-listening', icon: <Globe size={16} />, label: 'Social Listening', comingSoon: true },
+        { key: '/partnerships', icon: <Plug size={16} />, label: 'Partnerships & Announcements', comingSoon: true },
+        { key: '/hiring-intel', icon: <Users size={16} />, label: 'Hiring Intelligence', comingSoon: true },
+        { key: '/org-structure', icon: <Building2 size={16} />, label: 'Organisation Structure', comingSoon: true },
+      ],
+    },
+    {
+      key: 'strategy',
+      label: 'Strategy',
+      items: [
+        { key: '/strategy-timeline', icon: <LineChart size={16} />, label: 'Strategy Timeline', comingSoon: true },
+        { key: '/strategic-insights', icon: <TrendingUp size={16} />, label: 'Strategic Insights', comingSoon: true },
+      ],
+    },
+    {
+      key: 'reports-alerts',
+      label: 'Reports & Alerts',
+      items: [
+        { key: '/weekly-digest', icon: <FileText size={16} />, label: 'Weekly Digest', comingSoon: true },
+        { key: '/custom-reports', icon: <ClipboardCheck size={16} />, label: 'Custom Reports', comingSoon: true },
+        { key: '/alert-config', icon: <Bell size={16} />, label: 'Alert Configuration', comingSoon: true },
+      ],
+    },
+    {
+      key: 'settings',
+      label: 'Settings',
+      items: [
+        { key: '/settings-integrations', icon: <Sliders size={16} />, label: 'Integrations', comingSoon: true },
+        { key: '/settings-team', icon: <UserCog size={16} />, label: 'Team & Workspace', comingSoon: true },
+        { key: '/settings-account', icon: <CreditCard size={16} />, label: 'Account', comingSoon: true },
+      ],
+    },
   ];
 }
 
@@ -56,13 +144,14 @@ function getPinnedItems(user) {
 }
 
 const REPORT_PAGE_ROUTES = [
-  '/review-report', '/feature-matrix', '/claims-audit', '/integrations',
+  '/review-report', '/feature-matrix', '/claims-comparison', '/integrations',
   '/social-proof', '/faq-intel', '/news-momentum',
 ];
 
 function getSelectedKeys(pathname) {
   if (/\/projects\/[^/]+\/report$/.test(pathname)) return ['/review-report'];
   if (/\/projects\/[^/]+\/feature-report$/.test(pathname)) return ['/feature-matrix'];
+  if (pathname === '/claims-audit') return ['/claims-comparison'];
   return [pathname];
 }
 
@@ -211,9 +300,9 @@ function AppLayout({ user, activeTenantId, onTenantChange, onLogout, children })
             <TenantSelector activeTenantId={activeTenantId} onTenantChange={onTenantChange} />
           )}
 
-          {/* Main nav — draggable sidebar */}
+          {/* Main nav — hierarchical sidebar */}
           <SortableSidebar
-            items={getSidebarItems()}
+            sections={getSidebarSections()}
             pinnedItems={getPinnedItems(user)}
             userId={user.id}
             collapsed={collapsed}
@@ -416,7 +505,8 @@ function App() {
           {/* New direct-navigation routes */}
           <Route path="/review-report" element={<ProjectRedirect />} />
           <Route path="/feature-matrix" element={<FeatureReport />} />
-          <Route path="/claims-audit" element={<ClaimsAuditPage />} />
+          <Route path="/claims-comparison" element={<ClaimsAuditPage />} />
+          <Route path="/claims-audit" element={<Navigate to="/claims-comparison" replace />} />
           <Route path="/integrations" element={<IntegrationCoveragePage />} />
           <Route path="/social-proof" element={<CustomerRecognitionPage />} />
           <Route path="/faq-intel" element={<FAQIntelligencePage />} />
