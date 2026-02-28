@@ -1,4 +1,5 @@
 import Collapsible from './ui/Collapsible';
+import stripScores from './utils/stripScores';
 
 const SEVERITY_CLASSES = { HIGH: 'severity-critical', MEDIUM: 'severity-high', LOW: 'severity-medium' };
 
@@ -12,8 +13,8 @@ export default function StrengthsWeaknesses({ battlecard }) {
           <div className="subsection-label" style={{ color: 'var(--success)' }}>Strengths</div>
           {strengths.map((s, i) => (
             <div key={i} className="insight-card strength-card">
-              <div className="insight-text">{s.point}</div>
-              <div className="insight-quote">{s.evidence}</div>
+              <div className="insight-text">{stripScores(s.point)}</div>
+              <div className="insight-quote">{stripScores(s.evidence)}</div>
             </div>
           ))}
         </div>
@@ -22,10 +23,10 @@ export default function StrengthsWeaknesses({ battlecard }) {
           {weaknesses.map((w, i) => (
             <div key={i} className="insight-card weakness-card">
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                <span className="insight-text" style={{ marginBottom: 0 }}>{w.point}</span>
+                <span className="insight-text" style={{ marginBottom: 0 }}>{stripScores(w.point)}</span>
                 <span className={`severity-badge ${SEVERITY_CLASSES[w.severity] || ''}`}>{w.severity}</span>
               </div>
-              <div className="insight-quote">{w.evidence}</div>
+              <div className="insight-quote">{stripScores(w.evidence)}</div>
             </div>
           ))}
         </div>

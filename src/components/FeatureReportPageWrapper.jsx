@@ -76,19 +76,25 @@ export default function FeatureReportPageWrapper({ children, showRegenerate = fa
     <div className="report-root report-container">
       <div className="report-header">
         <div className="report-logo"><span>KO</span>MPETE</div>
-        {showRegenerate && (
-          <div className="report-actions">
-            <button
-              className="btn-secondary"
-              onClick={handleRegenerate}
-              disabled={regenerating}
-              style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}
-            >
-              <RefreshCw size={14} className={regenerating ? 'spinning' : ''} />
-              {regenerating ? 'Regenerating...' : 'Regenerate'}
-            </button>
-          </div>
-        )}
+        {showRegenerate && (() => {
+          try {
+            const u = JSON.parse(localStorage.getItem('user') || '{}');
+            if (u.tier === 'executive') return null;
+          } catch (_) {}
+          return (
+            <div className="report-actions">
+              <button
+                className="btn-secondary"
+                onClick={handleRegenerate}
+                disabled={regenerating}
+                style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}
+              >
+                <RefreshCw size={14} className={regenerating ? 'spinning' : ''} />
+                {regenerating ? 'Regenerating...' : 'Regenerate'}
+              </button>
+            </div>
+          );
+        })()}
       </div>
       {children(normalizedData, normalizedData.meta)}
       <footer className="report-footer">

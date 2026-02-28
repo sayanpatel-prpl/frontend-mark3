@@ -100,6 +100,9 @@ export const featureReportApi = {
   getData: (projectId) => request(tenantPath(`/projects/${projectId}/feature-report/data`)),
   regenerateSection: (projectId) =>
     request(tenantPath(`/projects/${projectId}/feature-report/regenerate-section`), { method: 'POST' }),
+  getVersions: (projectId) => request(tenantPath(`/projects/${projectId}/feature-report/versions`)),
+  activateVersion: (projectId, versionId) =>
+    request(tenantPath(`/projects/${projectId}/feature-report/versions/${versionId}/activate`), { method: 'POST' }),
 };
 
 export const reportApi = {
@@ -107,6 +110,9 @@ export const reportApi = {
     request(tenantPath(`/projects/${projectId}/report/generate${refresh ? '?refresh=true' : ''}`), { method: 'POST' }),
   getStatus: (projectId) => request(tenantPath(`/projects/${projectId}/report/status`)),
   getData: (projectId) => request(tenantPath(`/projects/${projectId}/report/data`)),
+  getVersions: (projectId) => request(tenantPath(`/projects/${projectId}/report/versions`)),
+  activateVersion: (projectId, versionId) =>
+    request(tenantPath(`/projects/${projectId}/report/versions/${versionId}/activate`), { method: 'POST' }),
   getMarketOverview: (projectId, { refresh = false } = {}) =>
     request(tenantPath(`/projects/${projectId}/report-data.json${refresh ? '?refresh=true' : ''}`)),
   getBattlecard: (projectId, companyId, threatData, { refresh = false } = {}) =>

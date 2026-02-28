@@ -33,7 +33,7 @@ export default function ClaimsAudit({ data, meta }) {
 
   return (
     <div className="card">
-      <h3 className="section-title">Claims Audit</h3>
+      <h3 className="section-title">Claims Comparison</h3>
       <p style={{ color: 'var(--gray-600)', fontSize: '0.85rem', marginBottom: '1.25rem' }}>
         Side-by-side comparison of numeric claims across companies
       </p>

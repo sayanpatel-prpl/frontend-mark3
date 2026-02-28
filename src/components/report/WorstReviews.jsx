@@ -18,6 +18,32 @@ function isLegitName(name) {
   return !placeholders.includes(trimmed.toLowerCase());
 }
 
+const SOURCE_LABELS = {
+  g2: 'G2',
+  gartner: 'Gartner',
+  trustpilot: 'Trustpilot',
+  capterra: 'Capterra',
+};
+
+function SourceBadge({ source }) {
+  if (!source) return null;
+  const label = SOURCE_LABELS[source] || source;
+  return (
+    <span style={{
+      fontSize: '0.625rem',
+      fontWeight: 700,
+      textTransform: 'uppercase',
+      letterSpacing: '0.05em',
+      background: '#DBEAFE',
+      color: '#1E40AF',
+      padding: '2px 6px',
+      borderRadius: 4,
+    }}>
+      {label}
+    </span>
+  );
+}
+
 export default function WorstReviews({ comp }) {
   const reviews = comp.damagingReviews || [];
   if (reviews.length === 0) return null;
@@ -32,19 +58,17 @@ export default function WorstReviews({ comp }) {
           <div className="damaging-header">
             <span className="damaging-rank">#{i + 1}</span>
             {r.score != null && <StarRating score={r.score} />}
+            <SourceBadge source={r.source} />
             {isLegitName(r.reviewer_name) && (
               <span style={{ fontSize: '0.75rem', fontWeight: 500, color: 'var(--gray-700)' }}>{r.reviewer_name}</span>
             )}
             {r.reviewer_segment && <span className="damaging-segment">{r.reviewer_segment}</span>}
-            {r.damage_score != null && (
-              <span className="damage-score-badge">Damage: {r.damage_score}</span>
-            )}
           </div>
           {r.title && <div className="damaging-title">{r.title}</div>}
           <div className="damaging-quote">"{r.ai_summary}"</div>
           {r.helpful_count > 0 && (
-            <div style={{ fontSize: '0.75rem', color: 'var(--warning)', marginTop: '0.5rem' }}>
-              {r.helpful_count} people found this helpful
+            <div style={{ fontSize: '0.75rem', color: 'var(--gray-500)', marginTop: '0.5rem', fontStyle: 'italic' }}>
+              {r.helpful_count} {r.helpful_count === 1 ? 'person' : 'people'} found this review helpful on the original review platform
             </div>
           )}
         </div>
