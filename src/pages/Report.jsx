@@ -41,8 +41,9 @@ function ReportLanding({ data, onEnter }) {
   );
 }
 
-export default function Report() {
-  const { id: projectId } = useParams();
+export default function Report({ resolvedProjectId }) {
+  const { id: paramId } = useParams();
+  const projectId = paramId || resolvedProjectId;
   const navigate = useNavigate();
   const printRef = useRef(null);
 
@@ -63,7 +64,12 @@ export default function Report() {
     setLoading(true);
     setError('');
 
-    reportApi.getMarketOverview(projectId, { refresh })
+    // Try cached data first (instant), fall back to sync generation
+    const fetchData = refresh
+      ? reportApi.getMarketOverview(projectId, { refresh })
+      : reportApi.getData(projectId).catch(() => reportApi.getMarketOverview(projectId));
+
+    fetchData
       .then((result) => {
         setData(result);
 
@@ -225,8 +231,11 @@ export default function Report() {
             {(() => {
               try {
                 const u = JSON.parse(localStorage.getItem('user') || '{}');
+                const tier = u.tier;
+                // Hide regenerate for executive users
+                if (tier === 'executive') return null;
                 const domain = u.email?.split('@')[1];
-                if (domain === 'gmail.com') return (
+                if (domain === 'gmail.com' || tier === 'admin' || tier === 'kompete') return (
                   <button
                     className="btn-secondary"
                     onClick={handleRefresh}

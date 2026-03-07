@@ -1,3 +1,5 @@
+import { Tooltip } from 'antd';
+
 function deriveLabel(url) {
   try {
     const u = new URL(url);
@@ -34,7 +36,8 @@ export default function SourceLinks({ sources }) {
       }}>Sources</div>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
         {items.map((s, i) => (
-          <a key={i} href={s.url} target="_blank" rel="noopener noreferrer" style={{
+          <Tooltip key={i} title={s.url}>
+          <a href={s.url} target="_blank" rel="noopener noreferrer" style={{
             fontSize: '0.72rem', color: '#2B7AE8', textDecoration: 'none',
             padding: '3px 8px', borderRadius: 4,
             background: '#EBF4FF', border: '1px solid #BFDBFE',
@@ -44,9 +47,10 @@ export default function SourceLinks({ sources }) {
           }}
           onMouseOver={e => e.currentTarget.style.background = '#DBEAFE'}
           onMouseOut={e => e.currentTarget.style.background = '#EBF4FF'}
-          title={s.url}>
+          >
             {s.label}
           </a>
+          </Tooltip>
         ))}
       </div>
     </div>

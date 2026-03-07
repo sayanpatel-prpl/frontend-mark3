@@ -1,105 +1,28 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useState, useRef } from 'react';
+import { useParams } from 'react-router-dom';
 import { useReactToPrint } from 'react-to-print';
 import { RefreshCw } from 'lucide-react';
-import { featureReportApi } from '../services/api';
+import useProject from '../hooks/useProject';
+import useFeatureReportData from '../hooks/useFeatureReportData';
 import FeatureMatrix from '../components/feature-report/FeatureMatrix';
 import GapAnalysis from '../components/feature-report/GapAnalysis';
-import ClaimsAudit from '../components/feature-report/ClaimsAudit';
-import IntegrationMatrix from '../components/feature-report/IntegrationMatrix';
-import SocialProofScorecard from '../components/feature-report/SocialProofScorecard';
 import MessagingPlaybook from '../components/feature-report/MessagingPlaybook';
-import FAQIntelligence from '../components/feature-report/FAQIntelligence';
-import NewsMomentum from '../components/feature-report/NewsMomentum';
 import Spinner from '../components/report/ui/Spinner';
-
-const STATUS_LABELS = {
-  classifying: 'Classifying product pages...',
-  comparing: 'Comparing features across competitors...',
-  generating: 'Generating report sections...',
-};
+import PillTabs from '../components/report/ui/PillTabs';
 
 export default function FeatureReport() {
-  const { id: projectId } = useParams();
-  const navigate = useNavigate();
+  const { id: paramId } = useParams();
+  const { projectId: resolvedId } = useProject();
+  const projectId = paramId || resolvedId;
+
   const printRef = useRef(null);
+  const [activeTab, setActiveTab] = useState('matrix');
 
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [status, setStatus] = useState(null);
-  const [error, setError] = useState('');
-  const [refreshing, setRefreshing] = useState(false);
-  const pollRef = useRef(null);
-
-  const loadReport = useCallback((refresh = false) => {
-    setLoading(true);
-    setError('');
-
-    featureReportApi.generate(projectId, refresh)
-      .then((result) => {
-        if (result.status === 'generating' || result.status === 'classifying' || result.status === 'comparing') {
-          // Generation started, begin polling
-          setStatus(result.status);
-          setLoading(false);
-          startPolling();
-        } else if (result.feature_matrix) {
-          // Cached result returned
-          setData(result);
-          setStatus('success');
-          setLoading(false);
-        } else {
-          setLoading(false);
-          startPolling();
-        }
-      })
-      .catch((err) => {
-        setError(err.message);
-        setLoading(false);
-      });
-  }, [projectId]);
-
-  const startPolling = useCallback(() => {
-    clearInterval(pollRef.current);
-    pollRef.current = setInterval(async () => {
-      try {
-        const statusRes = await featureReportApi.getStatus(projectId);
-        setStatus(statusRes.status);
-
-        if (statusRes.status === 'success') {
-          clearInterval(pollRef.current);
-          const reportData = await featureReportApi.getData(projectId);
-          setData(reportData);
-        } else if (statusRes.status === 'failed') {
-          clearInterval(pollRef.current);
-          setError(statusRes.error_message || 'Report generation failed');
-        }
-      } catch (_) {}
-    }, 3000);
-  }, [projectId]);
-
-  useEffect(() => {
-    loadReport();
-    return () => clearInterval(pollRef.current);
-  }, [loadReport]);
-
-  const handleRefresh = useCallback(() => {
-    setRefreshing(true);
-    setData(null);
-    setStatus(null);
-    featureReportApi.generate(projectId, true)
-      .then(() => {
-        setRefreshing(false);
-        startPolling();
-      })
-      .catch((err) => {
-        setError(err.message);
-        setRefreshing(false);
-      });
-  }, [projectId, startPolling]);
+  const { data, loading, status, statusLabel, error, refreshing, refresh, loadReport } = useFeatureReportData(projectId);
 
   const reactToPrintFn = useReactToPrint({ contentRef: printRef });
 
-  if (loading) {
+  if (!projectId || loading) {
     return (
       <Spinner
         text="Loading feature report..."
@@ -109,21 +32,15 @@ export default function FeatureReport() {
     );
   }
 
-  // In-progress states
   if (!data && status && status !== 'failed') {
     return (
       <Spinner
-        text={STATUS_LABELS[status] || 'Generating feature report...'}
+        text={statusLabel || 'Generating feature report...'}
         subtext="This may take 20-40 minutes for the first generation. Subsequent loads will be instant."
         steps={[
           'Classifying product pages',
           'Comparing features across competitors',
-          'Generating claims audit',
-          'Building integration matrix',
-          'Analyzing social proof',
-          'Creating messaging playbook',
-          'Mining FAQ intelligence',
-          'Tracking news & momentum',
+          'Generating report sections',
         ]}
       />
     );
@@ -137,10 +54,7 @@ export default function FeatureReport() {
           <div className="report-error-desc">{error}</div>
         </div>
         <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
-          <button className="btn-secondary" onClick={() => navigate('/feature-reports')}>
-            Back to Reports
-          </button>
-          <button className="btn-primary" onClick={() => { setError(''); loadReport(); }}>
+          <button className="btn-primary" onClick={() => loadReport()}>
             Retry
           </button>
         </div>
@@ -150,7 +64,22 @@ export default function FeatureReport() {
 
   if (!data) return null;
 
+  // Normalize LLM data: unwrap object-wrapped arrays
+  const arrayKeys = ['feature_matrix', 'gap_analysis', 'messaging_playbook'];
+  for (const key of arrayKeys) {
+    const val = data[key];
+    if (val && !Array.isArray(val) && typeof val === 'object') {
+      const found = Object.values(val).find(v => Array.isArray(v));
+      data[key] = found || [];
+    }
+  }
+
   const { meta } = data;
+  const tabs = [
+    { key: 'matrix', label: 'Feature Matrix' },
+    { key: 'gaps', label: 'Gap Analysis' },
+    { key: 'messaging', label: 'Competitor Messaging Playbook' },
+  ];
 
   return (
     <div className="report-root report-container" ref={printRef}>
@@ -159,7 +88,7 @@ export default function FeatureReport() {
         <div className="report-actions">
           <button
             className="btn-secondary"
-            onClick={handleRefresh}
+            onClick={refresh}
             disabled={refreshing}
             style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}
           >
@@ -183,15 +112,23 @@ export default function FeatureReport() {
         </p>
       </div>
 
+      <PillTabs tabs={tabs} activeKey={activeTab} onChange={setActiveTab} />
       <div className="section">
-        <FeatureMatrix data={data.feature_matrix} meta={meta} />
-        <GapAnalysis data={data.gap_analysis} />
-        <ClaimsAudit data={data.claims_audit} meta={meta} />
-        <IntegrationMatrix data={data.integration_matrix} meta={meta} />
-        <SocialProofScorecard data={data.social_proof} />
-        <MessagingPlaybook data={data.messaging_playbook} meta={meta} />
-        <FAQIntelligence data={data.faq_intelligence} />
-        <NewsMomentum data={data.news_momentum} meta={meta} />
+        <div className={`tab-section${activeTab === 'matrix' ? '' : ' tab-section-hidden'}`}>
+          {data.feature_matrix && <FeatureMatrix data={data.feature_matrix} meta={meta} />}
+        </div>
+        <div className={`tab-section${activeTab === 'gaps' ? '' : ' tab-section-hidden'}`}>
+          {data.gap_analysis && <GapAnalysis data={data.gap_analysis} />}
+        </div>
+        <div className={`tab-section${activeTab === 'messaging' ? '' : ' tab-section-hidden'}`}>
+          {data.messaging_playbook?.length > 0
+            ? <MessagingPlaybook data={data.messaging_playbook} meta={meta} />
+            : <div className="card" style={{ textAlign: 'center', padding: '3rem 2rem', color: 'var(--gray-400)' }}>
+                <p style={{ fontSize: '1rem', fontWeight: 500 }}>Competitor Messaging Playbook data not yet available</p>
+                <p style={{ fontSize: '0.85rem' }}>Try regenerating the report to generate this section.</p>
+              </div>
+          }
+        </div>
       </div>
 
       <footer className="report-footer">
