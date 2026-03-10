@@ -18,6 +18,13 @@ import FAQIntelligencePage from './pages/FAQIntelligencePage';
 import NewsMomentumPage from './pages/NewsMomentumPage';
 import TenantSelector from './components/TenantSelector';
 import SortableSidebar from './components/SortableSidebar';
+import {
+  ExecutiveSnapshotPage, MarketPulsePage, FinancialPerformancePage,
+  TranscriptIntelPage, DealsPage, CompetitiveMovesPage,
+  LeadershipPage, DeepDivePage, AdvisoryPipelinePage,
+  ActionLensPage, WatchlistPage,
+} from './pages/IntelDashboard';
+import { tenantApi } from './services/api';
 
 // Preview page imports
 import GapAnalysisPreview from './pages/coming-soon/GapAnalysisPreview';
@@ -213,7 +220,7 @@ function isFullWidthPage(pathname) {
   return REPORT_PAGE_ROUTES.some((r) => pathname === r);
 }
 
-function AppLayout({ user, activeTenantId, onTenantChange, onLogout, children }) {
+function AppLayout({ user, activeTenantId, onTenantChange, onLogout, tenantConfig, children }) {
   const navigate = useNavigate();
   const location = useLocation();
   const { token } = theme.useToken();
@@ -460,6 +467,7 @@ const INACTIVITY_TIMEOUT = 30 * 60 * 1000; // 30 minutes
 function App() {
   const [user, setUser] = useState(null);
   const [activeTenantId, setActiveTenantId] = useState(null);
+  const [tenantConfig, setTenantConfig] = useState({});
   const [loading, setLoading] = useState(true);
   const timerRef = useRef(null);
 
@@ -521,6 +529,17 @@ function App() {
     setLoading(false);
   }, []);
 
+  // Fetch tenant config (feature flags) whenever active tenant changes
+  useEffect(() => {
+    if (!activeTenantId || !user) {
+      setTenantConfig({});
+      return;
+    }
+    tenantApi.getConfig()
+      .then(setTenantConfig)
+      .catch(() => setTenantConfig({}));
+  }, [activeTenantId, user]);
+
   const handleLogin = (userData) => {
     userData.tier = computeTier(userData);
     localStorage.setItem('user', JSON.stringify(userData));
@@ -554,7 +573,7 @@ function App() {
 
   return (
     <BrowserRouter>
-      <AppLayout user={user} activeTenantId={activeTenantId} onTenantChange={handleTenantChange} onLogout={() => { setUser(null); setActiveTenantId(null); }}>
+      <AppLayout user={user} activeTenantId={activeTenantId} onTenantChange={handleTenantChange} onLogout={() => { setUser(null); setActiveTenantId(null); }} tenantConfig={tenantConfig}>
         <Routes>
           {/* Live page routes */}
           <Route path="/review-report" element={<ProjectRedirect />} />
