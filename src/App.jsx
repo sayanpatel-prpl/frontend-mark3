@@ -18,6 +18,13 @@ import FAQIntelligencePage from './pages/FAQIntelligencePage';
 import NewsMomentumPage from './pages/NewsMomentumPage';
 import TenantSelector from './components/TenantSelector';
 import SortableSidebar from './components/SortableSidebar';
+import {
+  ExecutiveSnapshotPage, MarketPulsePage, FinancialPerformancePage,
+  TranscriptIntelPage, DealsPage, CompetitiveMovesPage,
+  LeadershipPage, DeepDivePage, AdvisoryPipelinePage,
+  ActionLensPage, WatchlistPage,
+} from './pages/IntelDashboard';
+import { tenantApi } from './services/api';
 
 const { Sider, Content } = Layout;
 
@@ -36,104 +43,150 @@ function getTierLabel(tier) {
   return 'User';
 }
 
-function getSidebarSections() {
-  return [
-    {
-      key: 'competitive-feed',
-      label: 'Competitive Feed',
-      items: [
-        { key: '/competitive-feed', icon: <Activity size={16} />, label: 'Live Feed', comingSoon: true },
-      ],
-    },
-    {
-      key: 'competitors',
-      label: 'Competitors',
-      items: [
-        { key: '/competitor-profiles', icon: <Target size={16} />, label: 'Competitor Profiles', comingSoon: true },
-        { key: '/competitor-discovery', icon: <Search size={16} />, label: 'Competitor Discovery', comingSoon: true },
-      ],
-    },
-    {
-      key: 'marketing-intel',
-      label: 'Marketing Intelligence',
-      items: [
-        { key: '/positioning', icon: <PenTool size={16} />, label: 'Positioning & Messaging', comingSoon: true },
-        { key: '/website-traffic', icon: <Globe size={16} />, label: 'Website Traffic & SEO', comingSoon: true },
-        { key: '/content-intel', icon: <FileText size={16} />, label: 'Content & Blog Intelligence', comingSoon: true },
-        { key: '/paid-channels', icon: <BarChart3 size={16} />, label: 'Paid Channels Overview', comingSoon: true },
-        { key: '/aeo', icon: <Search size={16} />, label: 'AEO', comingSoon: true },
-      ],
-    },
-    {
-      key: 'product-intel',
-      label: 'Product Intelligence',
-      items: [
-        { key: '/feature-matrix', icon: <LayoutGrid size={16} />, label: 'Feature Matrix' },
-        { key: '/integrations', icon: <Plug size={16} />, label: 'Integration Coverage' },
-        { key: '/gap-analysis', icon: <Package size={16} />, label: 'Feature & Integration Gap Analysis', comingSoon: true },
-        { key: '/pricing-tracker', icon: <DollarSign size={16} />, label: 'Pricing Tracker', comingSoon: true },
-        { key: '/faq-intel', icon: <HelpCircle size={16} />, label: 'FAQ Intelligence' },
-      ],
-    },
-    {
-      key: 'sales-enablement',
-      label: 'Sales Enablement',
-      items: [
-        { key: '/battle-cards', icon: <Swords size={16} />, label: 'Battle Cards', comingSoon: true },
-        { key: '/competitive-advantages', icon: <Trophy size={16} />, label: 'Competitive Advantages', comingSoon: true },
-        { key: '/claims-comparison', icon: <Scale size={16} />, label: 'Claims Comparison' },
-        { key: '/win-loss', icon: <AlertTriangle size={16} />, label: 'Win/Loss Signals', comingSoon: true },
-      ],
-    },
-    {
-      key: 'review-intel',
-      label: 'Review Intelligence',
-      items: [
-        { key: '/review-report', icon: <FileText size={16} />, label: 'Market Overview' },
-        { key: '/review-breakdown', icon: <ClipboardCheck size={16} />, label: 'Per-Competitor Breakdown', comingSoon: true },
-        { key: '/sentiment-trends', icon: <TrendingUp size={16} />, label: 'Sentiment Trends & NPS', comingSoon: true },
-        { key: '/review-heatmaps', icon: <BarChart3 size={16} />, label: 'Review Heat Maps', comingSoon: true },
-      ],
-    },
-    {
-      key: 'market-signals',
-      label: 'Market Signals',
-      items: [
-        { key: '/news-momentum', icon: <Newspaper size={16} />, label: 'News & Momentum' },
-        { key: '/social-proof', icon: <Award size={16} />, label: 'Customer Recognition' },
-        { key: '/social-listening', icon: <Globe size={16} />, label: 'Social Listening', comingSoon: true },
-        { key: '/partnerships', icon: <Plug size={16} />, label: 'Partnerships & Announcements', comingSoon: true },
-        { key: '/hiring-intel', icon: <Users size={16} />, label: 'Hiring Intelligence', comingSoon: true },
-        { key: '/org-structure', icon: <Building2 size={16} />, label: 'Organisation Structure', comingSoon: true },
-      ],
-    },
-    {
-      key: 'strategy',
-      label: 'Strategy',
-      items: [
-        { key: '/strategy-timeline', icon: <LineChart size={16} />, label: 'Strategy Timeline', comingSoon: true },
-        { key: '/strategic-insights', icon: <TrendingUp size={16} />, label: 'Strategic Insights', comingSoon: true },
-      ],
-    },
-    {
-      key: 'reports-alerts',
-      label: 'Reports & Alerts',
-      items: [
-        { key: '/weekly-digest', icon: <FileText size={16} />, label: 'Weekly Digest', comingSoon: true },
-        { key: '/custom-reports', icon: <ClipboardCheck size={16} />, label: 'Custom Reports', comingSoon: true },
-        { key: '/alert-config', icon: <Bell size={16} />, label: 'Alert Configuration', comingSoon: true },
-      ],
-    },
-    {
-      key: 'settings',
-      label: 'Settings',
-      items: [
-        { key: '/settings-integrations', icon: <Sliders size={16} />, label: 'Integrations', comingSoon: true },
-        { key: '/settings-team', icon: <UserCog size={16} />, label: 'Team & Workspace', comingSoon: true },
-        { key: '/settings-account', icon: <CreditCard size={16} />, label: 'Account', comingSoon: true },
-      ],
-    },
-  ];
+function getSidebarSections(tenantConfig = {}) {
+  const sections = [];
+
+  if (tenantConfig.consumer_durables) {
+    // Consumer Durables tenants get ONLY the CD sidebar
+    sections.push(
+      {
+        key: 'cd-overview',
+        label: 'Overview',
+        items: [
+          { key: '/intel/executive-snapshot', icon: <Target size={16} />, label: 'Executive Snapshot' },
+          { key: '/intel/market-pulse', icon: <Activity size={16} />, label: 'Market Pulse' },
+          { key: '/intel/financial-performance', icon: <BarChart3 size={16} />, label: 'Financial Performance' },
+          { key: '/intel/transcript-intel', icon: <FileText size={16} />, label: 'Transcript Intel' },
+        ],
+      },
+      {
+        key: 'cd-analysis',
+        label: 'Analysis',
+        items: [
+          { key: '/intel/deals', icon: <DollarSign size={16} />, label: 'Deals & Transactions' },
+          { key: '/intel/competitive-moves', icon: <Swords size={16} />, label: 'Competitive Moves' },
+          { key: '/intel/leadership', icon: <Shield size={16} />, label: 'Leadership & Governance' },
+        ],
+      },
+      {
+        key: 'cd-strategy',
+        label: 'Strategy',
+        items: [
+          { key: '/intel/deep-dive', icon: <Search size={16} />, label: 'Sub-Sector Deep Dive' },
+          { key: '/intel/advisory-pipeline', icon: <TrendingUp size={16} />, label: 'Advisory Pipeline' },
+          { key: '/intel/action-lens', icon: <Users size={16} />, label: 'Action Lens' },
+        ],
+      },
+      {
+        key: 'cd-signals',
+        label: 'Signals',
+        items: [
+          { key: '/intel/watchlist', icon: <AlertTriangle size={16} />, label: 'Watchlist & Forward Indicators' },
+        ],
+      },
+    );
+  } else {
+    // Non-CD tenants get the standard Kompete sidebar
+    sections.push(
+      {
+        key: 'competitive-feed',
+        label: 'Competitive Feed',
+        items: [
+          { key: '/competitive-feed', icon: <Activity size={16} />, label: 'Live Feed', comingSoon: true },
+        ],
+      },
+      {
+        key: 'competitors',
+        label: 'Competitors',
+        items: [
+          { key: '/competitor-profiles', icon: <Target size={16} />, label: 'Competitor Profiles', comingSoon: true },
+          { key: '/competitor-discovery', icon: <Search size={16} />, label: 'Competitor Discovery', comingSoon: true },
+        ],
+      },
+      {
+        key: 'marketing-intel',
+        label: 'Marketing Intelligence',
+        items: [
+          { key: '/positioning', icon: <PenTool size={16} />, label: 'Positioning & Messaging', comingSoon: true },
+          { key: '/website-traffic', icon: <Globe size={16} />, label: 'Website Traffic & SEO', comingSoon: true },
+          { key: '/content-intel', icon: <FileText size={16} />, label: 'Content & Blog Intelligence', comingSoon: true },
+          { key: '/paid-channels', icon: <BarChart3 size={16} />, label: 'Paid Channels Overview', comingSoon: true },
+          { key: '/aeo', icon: <Search size={16} />, label: 'AEO', comingSoon: true },
+        ],
+      },
+      {
+        key: 'product-intel',
+        label: 'Product Intelligence',
+        items: [
+          { key: '/feature-matrix', icon: <LayoutGrid size={16} />, label: 'Feature Matrix' },
+          { key: '/integrations', icon: <Plug size={16} />, label: 'Integration Coverage' },
+          { key: '/gap-analysis', icon: <Package size={16} />, label: 'Feature & Integration Gap Analysis', comingSoon: true },
+          { key: '/pricing-tracker', icon: <DollarSign size={16} />, label: 'Pricing Tracker', comingSoon: true },
+          { key: '/faq-intel', icon: <HelpCircle size={16} />, label: 'FAQ Intelligence' },
+        ],
+      },
+      {
+        key: 'sales-enablement',
+        label: 'Sales Enablement',
+        items: [
+          { key: '/battle-cards', icon: <Swords size={16} />, label: 'Battle Cards', comingSoon: true },
+          { key: '/competitive-advantages', icon: <Trophy size={16} />, label: 'Competitive Advantages', comingSoon: true },
+          { key: '/claims-comparison', icon: <Scale size={16} />, label: 'Claims Comparison' },
+          { key: '/win-loss', icon: <AlertTriangle size={16} />, label: 'Win/Loss Signals', comingSoon: true },
+        ],
+      },
+      {
+        key: 'review-intel',
+        label: 'Review Intelligence',
+        items: [
+          { key: '/review-report', icon: <FileText size={16} />, label: 'Market Overview' },
+          { key: '/review-breakdown', icon: <ClipboardCheck size={16} />, label: 'Per-Competitor Breakdown', comingSoon: true },
+          { key: '/sentiment-trends', icon: <TrendingUp size={16} />, label: 'Sentiment Trends & NPS', comingSoon: true },
+          { key: '/review-heatmaps', icon: <BarChart3 size={16} />, label: 'Review Heat Maps', comingSoon: true },
+        ],
+      },
+      {
+        key: 'market-signals',
+        label: 'Market Signals',
+        items: [
+          { key: '/news-momentum', icon: <Newspaper size={16} />, label: 'News & Momentum' },
+          { key: '/social-proof', icon: <Award size={16} />, label: 'Customer Recognition' },
+          { key: '/social-listening', icon: <Globe size={16} />, label: 'Social Listening', comingSoon: true },
+          { key: '/partnerships', icon: <Plug size={16} />, label: 'Partnerships & Announcements', comingSoon: true },
+          { key: '/hiring-intel', icon: <Users size={16} />, label: 'Hiring Intelligence', comingSoon: true },
+          { key: '/org-structure', icon: <Building2 size={16} />, label: 'Organisation Structure', comingSoon: true },
+        ],
+      },
+      {
+        key: 'strategy',
+        label: 'Strategy',
+        items: [
+          { key: '/strategy-timeline', icon: <LineChart size={16} />, label: 'Strategy Timeline', comingSoon: true },
+          { key: '/strategic-insights', icon: <TrendingUp size={16} />, label: 'Strategic Insights', comingSoon: true },
+        ],
+      },
+      {
+        key: 'reports-alerts',
+        label: 'Reports & Alerts',
+        items: [
+          { key: '/weekly-digest', icon: <FileText size={16} />, label: 'Weekly Digest', comingSoon: true },
+          { key: '/custom-reports', icon: <ClipboardCheck size={16} />, label: 'Custom Reports', comingSoon: true },
+          { key: '/alert-config', icon: <Bell size={16} />, label: 'Alert Configuration', comingSoon: true },
+        ],
+      },
+      {
+        key: 'settings',
+        label: 'Settings',
+        items: [
+          { key: '/settings-integrations', icon: <Sliders size={16} />, label: 'Integrations', comingSoon: true },
+          { key: '/settings-team', icon: <UserCog size={16} />, label: 'Team & Workspace', comingSoon: true },
+          { key: '/settings-account', icon: <CreditCard size={16} />, label: 'Account', comingSoon: true },
+        ],
+      },
+    );
+  }
+
+  return sections;
 }
 
 function getPinnedItems(user) {
@@ -160,7 +213,7 @@ function isFullWidthPage(pathname) {
   return REPORT_PAGE_ROUTES.some((r) => pathname === r);
 }
 
-function AppLayout({ user, activeTenantId, onTenantChange, onLogout, children }) {
+function AppLayout({ user, activeTenantId, onTenantChange, onLogout, tenantConfig, children }) {
   const navigate = useNavigate();
   const location = useLocation();
   const { token } = theme.useToken();
@@ -302,7 +355,7 @@ function AppLayout({ user, activeTenantId, onTenantChange, onLogout, children })
 
           {/* Main nav — hierarchical sidebar */}
           <SortableSidebar
-            sections={getSidebarSections()}
+            sections={getSidebarSections(tenantConfig)}
             pinnedItems={getPinnedItems(user)}
             userId={user.id}
             collapsed={collapsed}
@@ -406,6 +459,7 @@ const INACTIVITY_TIMEOUT = 30 * 60 * 1000; // 30 minutes
 function App() {
   const [user, setUser] = useState(null);
   const [activeTenantId, setActiveTenantId] = useState(null);
+  const [tenantConfig, setTenantConfig] = useState({});
   const [loading, setLoading] = useState(true);
   const timerRef = useRef(null);
 
@@ -467,6 +521,17 @@ function App() {
     setLoading(false);
   }, []);
 
+  // Fetch tenant config (feature flags) whenever active tenant changes
+  useEffect(() => {
+    if (!activeTenantId || !user) {
+      setTenantConfig({});
+      return;
+    }
+    tenantApi.getConfig()
+      .then(setTenantConfig)
+      .catch(() => setTenantConfig({}));
+  }, [activeTenantId, user]);
+
   const handleLogin = (userData) => {
     userData.tier = computeTier(userData);
     localStorage.setItem('user', JSON.stringify(userData));
@@ -500,7 +565,7 @@ function App() {
 
   return (
     <BrowserRouter>
-      <AppLayout user={user} activeTenantId={activeTenantId} onTenantChange={handleTenantChange} onLogout={() => { setUser(null); setActiveTenantId(null); }}>
+      <AppLayout user={user} activeTenantId={activeTenantId} onTenantChange={handleTenantChange} onLogout={() => { setUser(null); setActiveTenantId(null); }} tenantConfig={tenantConfig}>
         <Routes>
           {/* New direct-navigation routes */}
           <Route path="/review-report" element={<ProjectRedirect />} />
@@ -511,6 +576,19 @@ function App() {
           <Route path="/social-proof" element={<CustomerRecognitionPage />} />
           <Route path="/faq-intel" element={<FAQIntelligencePage />} />
           <Route path="/news-momentum" element={<NewsMomentumPage />} />
+
+          {/* Consumer Durables Intel routes */}
+          <Route path="/intel/executive-snapshot" element={<ExecutiveSnapshotPage />} />
+          <Route path="/intel/market-pulse" element={<MarketPulsePage />} />
+          <Route path="/intel/financial-performance" element={<FinancialPerformancePage />} />
+          <Route path="/intel/transcript-intel" element={<TranscriptIntelPage />} />
+          <Route path="/intel/deals" element={<DealsPage />} />
+          <Route path="/intel/competitive-moves" element={<CompetitiveMovesPage />} />
+          <Route path="/intel/leadership" element={<LeadershipPage />} />
+          <Route path="/intel/deep-dive" element={<DeepDivePage />} />
+          <Route path="/intel/advisory-pipeline" element={<AdvisoryPipelinePage />} />
+          <Route path="/intel/action-lens" element={<ActionLensPage />} />
+          <Route path="/intel/watchlist" element={<WatchlistPage />} />
 
           {/* Legacy routes — resolve correct project ID */}
           <Route path="/projects/:id/report" element={<ProjectRedirect />} />
