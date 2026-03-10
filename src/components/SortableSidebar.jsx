@@ -114,9 +114,9 @@ export default function SortableSidebar({ sections, pinnedItems = [], userId, co
   const [openSections, setOpenSections] = useState(() => {
     const stored = getStoredSections(userId);
     if (stored) return stored;
-    // Default all sections open
+    // Default all sections collapsed
     const defaults = {};
-    (sections || []).forEach(s => { defaults[s.key] = true; });
+    (sections || []).forEach(s => { defaults[s.key] = false; });
     return defaults;
   });
 

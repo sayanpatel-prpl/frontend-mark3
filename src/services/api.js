@@ -57,6 +57,7 @@ export const tenantApi = {
   update: (id, data) => request(`/tenants/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   delete: (id) => request(`/tenants/${id}`, { method: 'DELETE' }),
   restore: (id) => request(`/tenants/${id}/restore`, { method: 'POST' }),
+  getConfig: () => request(tenantPath('/config')),
 };
 
 export const companyApi = {
@@ -103,6 +104,30 @@ export const featureReportApi = {
   getVersions: (projectId) => request(tenantPath(`/projects/${projectId}/feature-report/versions`)),
   activateVersion: (projectId, versionId) =>
     request(tenantPath(`/projects/${projectId}/feature-report/versions/${versionId}/activate`), { method: 'POST' }),
+};
+
+export const intelApi = {
+  // Dashboard composites
+  executiveSnapshot: () => request('/intel/dashboard/executive-snapshot'),
+  financialPerformance: () => request('/intel/dashboard/financial-performance'),
+  transcriptIntel: () => request('/intel/dashboard/transcript-intel'),
+  subSectorDeepDive: () => request('/intel/dashboard/sub-sector-deep-dive'),
+  advisoryPipeline: () => request('/intel/dashboard/advisory-pipeline'),
+  // Entity endpoints
+  companies: () => request('/intel/companies'),
+  companyFull: (id) => request(`/intel/companies/${id}/full`),
+  financials: () => request('/intel/financials'),
+  signals: (filters) => request(`/intel/signals${filters ? '?' + new URLSearchParams(filters) : ''}`),
+  deals: (filters) => request(`/intel/deals${filters ? '?' + new URLSearchParams(filters) : ''}`),
+  drifts: () => request('/intel/drifts'),
+  themes: () => request('/intel/themes'),
+  competitive: (filters) => request(`/intel/competitive/moves${filters ? '?' + new URLSearchParams(filters) : ''}`),
+  marketPulse: () => request('/intel/market-pulse'),
+  talkVsWalk: () => request('/intel/talk-vs-walk'),
+  watchlist: () => request('/intel/watchlist'),
+  leadership: () => request('/intel/leadership'),
+  actionLens: (filters) => request(`/intel/action-lens${filters ? '?' + new URLSearchParams(filters) : ''}`),
+  opportunities: (filters) => request(`/intel/opportunities${filters ? '?' + new URLSearchParams(filters) : ''}`),
 };
 
 export const reportApi = {
