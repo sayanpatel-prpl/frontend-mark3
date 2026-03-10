@@ -3,9 +3,10 @@ import ComparisonMatrix from './ComparisonMatrix';
 import QuarterlyTrendChart from './QuarterlyTrendChart';
 import CategoryHeatmap from './CategoryHeatmap';
 import ThreatCards from './ThreatCards';
+import ReviewSourcePieChart from './ReviewSourcePieChart';
 
 export default function MarketOverview({ data }) {
-  const { project, meta, mainCompanyStats, competitors, categoryLabels, categoryColumns, quarterlyTrend } = data;
+  const { project, meta, mainCompanyStats, competitors, categoryLabels, categoryColumns, quarterlyTrend, reviewSourceBreakdown } = data;
 
   return (
     <div>
@@ -23,7 +24,13 @@ export default function MarketOverview({ data }) {
 
       <ComparisonMatrix competitors={competitors} mainCompanyStats={mainCompanyStats} project={project} />
 
-      <QuarterlyTrendChart quarterlyTrend={quarterlyTrend} />
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
+        <div style={{ gridColumn: '1 / -1' }}>
+          <QuarterlyTrendChart quarterlyTrend={quarterlyTrend} />
+        </div>
+      </div>
+
+      <ReviewSourcePieChart reviewSourceBreakdown={reviewSourceBreakdown} />
 
       <CategoryHeatmap
         competitors={competitors}

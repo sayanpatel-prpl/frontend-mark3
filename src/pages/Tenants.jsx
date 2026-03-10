@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Table, Button, Modal, Form, Input, InputNumber, Switch, Tag, Popconfirm, Space, message } from 'antd';
+import { Table, Button, Modal, Form, Input, InputNumber, Switch, Tag, Popconfirm, Space, message, theme } from 'antd';
 import { Plus } from 'lucide-react';
 import { tenantApi } from '../services/api';
 
 export default function Tenants() {
+  const { token } = theme.useToken();
   const [tenants, setTenants] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showInactive, setShowInactive] = useState(false);
@@ -105,7 +106,12 @@ export default function Tenants() {
   ];
 
   return (
-    <div>
+    <div style={{
+      background: token.colorBgContainer,
+      borderRadius: 12,
+      padding: 24,
+      border: `1px solid ${token.colorBorderSecondary}`,
+    }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <h2 style={{ margin: 0 }}>Tenants</h2>
         <Space>

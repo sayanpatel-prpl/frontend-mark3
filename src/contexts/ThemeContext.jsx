@@ -53,6 +53,11 @@ export function ThemeProvider({ children }) {
           algorithm: mode === 'dark' ? antTheme.darkAlgorithm : antTheme.defaultAlgorithm,
           cssVar: true,
           token: mode === 'dark' ? darkTokens : lightTokens,
+          components: {
+            Tooltip: mode === 'dark'
+              ? { colorBgSpotlight: '#E8ECF1', colorTextLightSolid: '#0F1219' }
+              : { colorBgSpotlight: '#1a1a2e', colorTextLightSolid: '#ffffff' },
+          },
         }}
       >
         {children}
