@@ -62,14 +62,14 @@ export default function BattlecardTab({ projectId, competitor, cache, onCache })
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <BattlecardHeader comp={comp} />
-      <SentimentBreakdown stats={comp.stats} />
+      <TrendAnalysis comp={comp} />
+      {/* <SentimentBreakdown stats={comp.stats} /> */}
       <ComplaintChips chips={comp.complaintChips} />
       <StrengthsWeaknesses battlecard={battlecard} />
       <LandmineQuestions battlecard={battlecard} />
       <ReviewPatterns battlecard={battlecard} />
       <PricingIntelligence comp={comp} battlecard={battlecard} />
       <CompetitiveAdvantages battlecard={battlecard} />
-      <TrendAnalysis comp={comp} />
       <WorstReviews comp={comp} />
     </div>
   );

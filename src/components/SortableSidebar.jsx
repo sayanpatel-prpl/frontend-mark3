@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronDown, ChevronRight } from 'lucide-react';
+import { ChevronDown, ChevronRight, Eye } from 'lucide-react';
 import { theme } from 'antd';
 
 const STORAGE_PREFIX = 'kompete-sidebar-sections-';
@@ -110,6 +110,33 @@ function SectionHeader({ label, collapsed, isOpen, onToggle }) {
   );
 }
 
+function ShowComingSoonToggle({ expanded, onToggle, count }) {
+  const { token } = theme.useToken();
+  return (
+    <div
+      onClick={onToggle}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 6,
+        padding: '5px 16px 5px 40px',
+        margin: '1px 8px',
+        borderRadius: 6,
+        cursor: 'pointer',
+        userSelect: 'none',
+        fontSize: 11,
+        color: token.colorTextQuaternary,
+        transition: 'color 0.15s',
+      }}
+      onMouseEnter={e => { e.currentTarget.style.color = token.colorTextSecondary; }}
+      onMouseLeave={e => { e.currentTarget.style.color = token.colorTextQuaternary; }}
+    >
+      <Eye size={11} />
+      <span>{expanded ? 'Hide' : 'Show'} upcoming ({count})</span>
+    </div>
+  );
+}
+
 export default function SortableSidebar({ sections, pinnedItems = [], userId, collapsed, selectedKeys, onNavigate }) {
   const [openSections, setOpenSections] = useState(() => {
     const stored = getStoredSections(userId);
@@ -120,6 +147,8 @@ export default function SortableSidebar({ sections, pinnedItems = [], userId, co
     return defaults;
   });
 
+  const [showComingSoon, setShowComingSoon] = useState({});
+
   const toggleSection = (sectionKey) => {
     setOpenSections(prev => {
       const next = { ...prev, [sectionKey]: !prev[sectionKey] };
@@ -128,10 +157,19 @@ export default function SortableSidebar({ sections, pinnedItems = [], userId, co
     });
   };
 
+  const toggleComingSoon = (sectionKey) => {
+    setShowComingSoon(prev => ({ ...prev, [sectionKey]: !prev[sectionKey] }));
+  };
+
   return (
     <div style={{ flex: 1, paddingTop: 4, overflowY: 'auto' }}>
       {(sections || []).map((section) => {
         const isOpen = openSections[section.key] !== false;
+        const allItems = section.items || [];
+        const activeItems = allItems.filter(item => !item.comingSoon);
+        const soonItems = allItems.filter(item => item.comingSoon);
+        const soonExpanded = showComingSoon[section.key] || false;
+
         return (
           <div key={section.key}>
             <SectionHeader
@@ -140,15 +178,37 @@ export default function SortableSidebar({ sections, pinnedItems = [], userId, co
               isOpen={isOpen}
               onToggle={() => toggleSection(section.key)}
             />
-            {(isOpen || collapsed) && (section.items || []).map((item) => (
-              <SidebarItem
-                key={item.key}
-                item={item}
-                isActive={selectedKeys.includes(item.key)}
-                collapsed={collapsed}
-                onClick={onNavigate}
-              />
-            ))}
+            {(isOpen || collapsed) && (
+              <>
+                {activeItems.map((item) => (
+                  <SidebarItem
+                    key={item.key}
+                    item={item}
+                    isActive={selectedKeys.includes(item.key)}
+                    collapsed={collapsed}
+                    onClick={onNavigate}
+                  />
+                ))}
+                {!collapsed && soonItems.length > 0 && (
+                  <>
+                    <ShowComingSoonToggle
+                      expanded={soonExpanded}
+                      onToggle={() => toggleComingSoon(section.key)}
+                      count={soonItems.length}
+                    />
+                    {soonExpanded && soonItems.map((item) => (
+                      <SidebarItem
+                        key={item.key}
+                        item={item}
+                        isActive={selectedKeys.includes(item.key)}
+                        collapsed={collapsed}
+                        onClick={onNavigate}
+                      />
+                    ))}
+                  </>
+                )}
+              </>
+            )}
           </div>
         );
       })}

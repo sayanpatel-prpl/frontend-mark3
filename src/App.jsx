@@ -16,6 +16,7 @@ import IntegrationCoveragePage from './pages/IntegrationCoveragePage';
 import CustomerRecognitionPage from './pages/CustomerRecognitionPage';
 import FAQIntelligencePage from './pages/FAQIntelligencePage';
 import NewsMomentumPage from './pages/NewsMomentumPage';
+import MessagingPlaybookPage from './pages/MessagingPlaybookPage';
 import TenantSelector from './components/TenantSelector';
 import SortableSidebar from './components/SortableSidebar';
 import {
@@ -107,7 +108,7 @@ function getSidebarSections(tenantConfig = {}) {
         key: 'marketing-intel',
         label: 'Marketing Intelligence',
         items: [
-          { key: '/positioning', icon: <PenTool size={16} />, label: 'Positioning & Messaging', comingSoon: true },
+          { key: '/messaging-playbook', icon: <PenTool size={16} />, label: 'Competitor Messaging Playbook' },
           { key: '/website-traffic', icon: <Globe size={16} />, label: 'Website Traffic & SEO', comingSoon: true },
           { key: '/content-intel', icon: <FileText size={16} />, label: 'Content & Blog Intelligence', comingSoon: true },
           { key: '/paid-channels', icon: <BarChart3 size={16} />, label: 'Paid Channels Overview', comingSoon: true },
@@ -198,7 +199,7 @@ function getPinnedItems(user) {
 
 const REPORT_PAGE_ROUTES = [
   '/review-report', '/feature-matrix', '/claims-comparison', '/integrations',
-  '/social-proof', '/faq-intel', '/news-momentum',
+  '/social-proof', '/faq-intel', '/news-momentum', '/messaging-playbook',
 ];
 
 function getSelectedKeys(pathname) {
@@ -576,6 +577,7 @@ function App() {
           <Route path="/social-proof" element={<CustomerRecognitionPage />} />
           <Route path="/faq-intel" element={<FAQIntelligencePage />} />
           <Route path="/news-momentum" element={<NewsMomentumPage />} />
+          <Route path="/messaging-playbook" element={<MessagingPlaybookPage />} />
 
           {/* Consumer Durables Intel routes */}
           <Route path="/intel/executive-snapshot" element={<ExecutiveSnapshotPage />} />
