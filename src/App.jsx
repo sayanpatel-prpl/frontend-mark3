@@ -78,8 +78,59 @@ function getTierLabel(tier) {
  * Primary sidebar sections — sections with at least 1 live item.
  * Live items sorted first, preview items after.
  */
-function getPrimarySections() {
+function getPrimarySections(tenantConfig = {}) {
+  if (tenantConfig.consumer_durables) {
+    return [
+      {
+        key: 'cd-overview',
+        label: 'Overview',
+        items: [
+          { key: '/intel/executive-snapshot', icon: <Target size={16} />, label: 'Executive Snapshot' },
+          { key: '/intel/market-pulse', icon: <Activity size={16} />, label: 'Market Pulse' },
+          { key: '/intel/financial-performance', icon: <BarChart3 size={16} />, label: 'Financial Performance' },
+          { key: '/intel/transcript-intel', icon: <FileText size={16} />, label: 'Transcript Intel' },
+        ],
+      },
+      {
+        key: 'cd-analysis',
+        label: 'Analysis',
+        items: [
+          { key: '/intel/deals', icon: <DollarSign size={16} />, label: 'Deals & Transactions' },
+          { key: '/intel/competitive-moves', icon: <Swords size={16} />, label: 'Competitive Moves' },
+          { key: '/intel/leadership', icon: <Shield size={16} />, label: 'Leadership & Governance' },
+        ],
+      },
+      {
+        key: 'cd-strategy',
+        label: 'Strategy',
+        items: [
+          { key: '/intel/deep-dive', icon: <Search size={16} />, label: 'Sub-Sector Deep Dive' },
+          { key: '/intel/advisory-pipeline', icon: <TrendingUp size={16} />, label: 'Advisory Pipeline' },
+          { key: '/intel/action-lens', icon: <Users size={16} />, label: 'Action Lens' },
+        ],
+      },
+      {
+        key: 'cd-signals',
+        label: 'Signals',
+        items: [
+          { key: '/intel/watchlist', icon: <AlertTriangle size={16} />, label: 'Watchlist & Forward Indicators' },
+        ],
+      },
+    ];
+  }
+
   return [
+    {
+      key: 'marketing-intel',
+      label: 'Marketing Intelligence',
+      items: [
+        { key: '/messaging-playbook', icon: <PenTool size={16} />, label: 'Competitor Messaging Playbook' },
+        { key: '/website-traffic', icon: <Globe size={16} />, label: 'Traffic & SEO', preview: true },
+        { key: '/content-intel', icon: <FileText size={16} />, label: 'Content Intel', preview: true },
+        { key: '/paid-channels', icon: <BarChart3 size={16} />, label: 'Paid Channels', preview: true },
+        { key: '/aeo', icon: <Search size={16} />, label: 'AEO', preview: true },
+      ],
+    },
     {
       key: 'product-intel',
       label: 'Product Intelligence',
