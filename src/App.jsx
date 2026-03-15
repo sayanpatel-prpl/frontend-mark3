@@ -16,6 +16,7 @@ import IntegrationCoveragePage from './pages/IntegrationCoveragePage';
 import CustomerRecognitionPage from './pages/CustomerRecognitionPage';
 import FAQIntelligencePage from './pages/FAQIntelligencePage';
 import NewsMomentumPage from './pages/NewsMomentumPage';
+import MessagingPlaybookPage from './pages/MessagingPlaybookPage';
 import TenantSelector from './components/TenantSelector';
 import SortableSidebar from './components/SortableSidebar';
 import {
@@ -584,6 +585,7 @@ function App() {
           <Route path="/social-proof" element={<CustomerRecognitionPage />} />
           <Route path="/faq-intel" element={<FAQIntelligencePage />} />
           <Route path="/news-momentum" element={<NewsMomentumPage />} />
+          <Route path="/messaging-playbook" element={<MessagingPlaybookPage />} />
 
           {/* Preview page routes */}
           <Route path="/gap-analysis" element={<GapAnalysisPreview />} />

@@ -1,5 +1,3 @@
-import Collapsible from './ui/Collapsible';
-
 export default function TrendAnalysis({ comp }) {
   const trend = comp.trendAnalysis;
   if (!trend) return null;
@@ -11,7 +9,14 @@ export default function TrendAnalysis({ comp }) {
     : trend.direction === 'declining' ? '↓' : '—';
 
   return (
-    <Collapsible title="Trend Analysis">
+    <div className="card" style={{ padding: '1.25rem 1.5rem' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
+        <h3 className="section-title" style={{ margin: 0 }}>Trend Analysis</h3>
+        <div className={`trend-direction ${dirClass}`} style={{ padding: '0.25rem 0.75rem', fontSize: '0.8125rem' }}>
+          <span>{dirArrow}</span>
+          <span style={{ textTransform: 'capitalize' }}>{trend.direction}</span>
+        </div>
+      </div>
       <div className="pricing-grid">
         {trend.periods.map((p) => (
           <div className="pricing-block" key={p.label}>
@@ -25,15 +30,6 @@ export default function TrendAnalysis({ comp }) {
           </div>
         ))}
       </div>
-      <div className="pricing-sentiment-bar">
-        <div className="pricing-block-label">Overall Direction</div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.5rem' }}>
-          <div className={`trend-direction ${dirClass}`} style={{ padding: '0.375rem 0.75rem', fontSize: '0.8125rem' }}>
-            <span>{dirArrow}</span>
-            <span style={{ textTransform: 'capitalize' }}>{trend.direction}</span>
-          </div>
-        </div>
-      </div>
-    </Collapsible>
+    </div>
   );
 }
