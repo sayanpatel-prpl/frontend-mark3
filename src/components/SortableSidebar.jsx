@@ -3,6 +3,7 @@ import { ChevronDown, ChevronRight } from 'lucide-react';
 import { theme } from 'antd';
 
 const STORAGE_PREFIX = 'kompete-sidebar-sections-';
+const EXPLORE_STORAGE_KEY = 'kompete-sidebar-explore-open';
 
 function getStoredSections(userId) {
   try {
@@ -17,29 +18,17 @@ function setStoredSections(userId, sections) {
   localStorage.setItem(`${STORAGE_PREFIX}${userId}`, JSON.stringify(sections));
 }
 
-function ComingSoonTag() {
+function PreviewTag() {
   return (
-    <span style={{
-      fontSize: 9,
-      fontWeight: 700,
-      textTransform: 'uppercase',
-      letterSpacing: '0.5px',
-      background: '#FEE2E2',
-      color: '#DC2626',
-      padding: '1px 6px',
-      borderRadius: 4,
-      marginLeft: 'auto',
-      flexShrink: 0,
-      lineHeight: '16px',
-    }}>
-      Soon
+    <span className="preview-tag">
+      Preview
     </span>
   );
 }
 
 function SidebarItem({ item, isActive, collapsed, onClick }) {
   const { token } = theme.useToken();
-  const disabled = item.comingSoon;
+  const isPreview = item.preview;
 
   const style = {
     display: 'flex',
@@ -48,29 +37,30 @@ function SidebarItem({ item, isActive, collapsed, onClick }) {
     padding: collapsed ? '7px 0' : '7px 16px 7px 40px',
     margin: '1px 8px',
     borderRadius: 6,
-    cursor: disabled ? 'default' : 'pointer',
-    color: disabled ? token.colorTextQuaternary : isActive ? token.colorPrimary : token.colorTextSecondary,
-    background: isActive && !disabled ? token.colorPrimaryBg : 'transparent',
+    cursor: 'pointer',
+    color: isPreview
+      ? (isActive ? token.colorPrimary : token.colorTextTertiary)
+      : (isActive ? token.colorPrimary : token.colorTextSecondary),
+    background: isActive ? token.colorPrimaryBg : 'transparent',
     fontWeight: isActive ? 600 : 400,
     fontSize: 13,
     justifyContent: collapsed ? 'center' : 'flex-start',
     userSelect: 'none',
-    opacity: disabled ? 0.6 : 1,
     transition: 'background 0.15s',
   };
 
   return (
     <div
       style={style}
-      onClick={() => !disabled && onClick(item.key)}
-      onMouseEnter={e => { if (!isActive && !disabled) e.currentTarget.style.background = token.colorBgTextHover; }}
-      onMouseLeave={e => { if (!isActive && !disabled) e.currentTarget.style.background = 'transparent'; }}
+      onClick={() => onClick(item.key)}
+      onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = token.colorBgTextHover; }}
+      onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = 'transparent'; }}
     >
       <span style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>{item.icon}</span>
       {!collapsed && (
         <>
           <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.label}</span>
-          {disabled && <ComingSoonTag />}
+          {isPreview && <PreviewTag />}
         </>
       )}
     </div>
@@ -110,14 +100,27 @@ function SectionHeader({ label, collapsed, isOpen, onToggle }) {
   );
 }
 
-export default function SortableSidebar({ sections, pinnedItems = [], userId, collapsed, selectedKeys, onNavigate }) {
+function SectionDivider({ collapsed }) {
+  if (collapsed) return null;
+  return <hr className="preview-section-divider" />;
+}
+
+export default function SortableSidebar({ sections, exploreSections = [], pinnedItems = [], userId, collapsed, selectedKeys, onNavigate }) {
   const [openSections, setOpenSections] = useState(() => {
     const stored = getStoredSections(userId);
     if (stored) return stored;
-    // Default all sections open
     const defaults = {};
     (sections || []).forEach(s => { defaults[s.key] = true; });
+    (exploreSections || []).forEach(s => { defaults[s.key] = true; });
     return defaults;
+  });
+
+  const [exploreOpen, setExploreOpen] = useState(() => {
+    try {
+      return localStorage.getItem(EXPLORE_STORAGE_KEY) === 'true';
+    } catch {
+      return false;
+    }
   });
 
   const toggleSection = (sectionKey) => {
@@ -128,10 +131,28 @@ export default function SortableSidebar({ sections, pinnedItems = [], userId, co
     });
   };
 
+  const toggleExplore = () => {
+    setExploreOpen(prev => {
+      const next = !prev;
+      localStorage.setItem(EXPLORE_STORAGE_KEY, String(next));
+      return next;
+    });
+  };
+
+  // Count total explore items
+  const exploreItemCount = (exploreSections || []).reduce((sum, s) => sum + (s.items || []).length, 0);
+
+  const { token } = theme.useToken();
+
   return (
     <div style={{ flex: 1, paddingTop: 4, overflowY: 'auto' }}>
+      {/* Primary sections (have at least 1 live item) */}
       {(sections || []).map((section) => {
         const isOpen = openSections[section.key] !== false;
+        const liveItems = (section.items || []).filter(i => !i.preview);
+        const previewItems = (section.items || []).filter(i => i.preview);
+        const hasBoth = liveItems.length > 0 && previewItems.length > 0;
+
         return (
           <div key={section.key}>
             <SectionHeader
@@ -140,19 +161,34 @@ export default function SortableSidebar({ sections, pinnedItems = [], userId, co
               isOpen={isOpen}
               onToggle={() => toggleSection(section.key)}
             />
-            {(isOpen || collapsed) && (section.items || []).map((item) => (
-              <SidebarItem
-                key={item.key}
-                item={item}
-                isActive={selectedKeys.includes(item.key)}
-                collapsed={collapsed}
-                onClick={onNavigate}
-              />
-            ))}
+            {(isOpen || collapsed) && (
+              <>
+                {liveItems.map((item) => (
+                  <SidebarItem
+                    key={item.key}
+                    item={item}
+                    isActive={selectedKeys.includes(item.key)}
+                    collapsed={collapsed}
+                    onClick={onNavigate}
+                  />
+                ))}
+                {hasBoth && <SectionDivider collapsed={collapsed} />}
+                {previewItems.map((item) => (
+                  <SidebarItem
+                    key={item.key}
+                    item={item}
+                    isActive={selectedKeys.includes(item.key)}
+                    collapsed={collapsed}
+                    onClick={onNavigate}
+                  />
+                ))}
+              </>
+            )}
           </div>
         );
       })}
 
+      {/* Pinned items */}
       {pinnedItems.map((item) => (
         <SidebarItem
           key={item.key}
@@ -162,6 +198,65 @@ export default function SortableSidebar({ sections, pinnedItems = [], userId, co
           onClick={onNavigate}
         />
       ))}
+
+      {/* Explore Upcoming meta-section */}
+      {exploreSections.length > 0 && !collapsed && (
+        <>
+          <hr className="explore-upcoming-separator" />
+          <div
+            className="explore-upcoming-header"
+            onClick={toggleExplore}
+          >
+            <span style={{ display: 'flex', alignItems: 'center', color: '#C9A84C' }}>
+              {exploreOpen ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+            </span>
+            <span className="explore-upcoming-label">Explore Upcoming</span>
+            <span className="explore-upcoming-count">({exploreItemCount})</span>
+          </div>
+
+          {exploreOpen && (
+            <>
+              {(exploreSections || []).map((section) => {
+                const isOpen = openSections[section.key] !== false;
+                return (
+                  <div key={section.key}>
+                    <SectionHeader
+                      label={section.label}
+                      collapsed={collapsed}
+                      isOpen={isOpen}
+                      onToggle={() => toggleSection(section.key)}
+                    />
+                    {isOpen && (section.items || []).map((item) => (
+                      <SidebarItem
+                        key={item.key}
+                        item={item}
+                        isActive={selectedKeys.includes(item.key)}
+                        collapsed={collapsed}
+                        onClick={onNavigate}
+                      />
+                    ))}
+                  </div>
+                );
+              })}
+            </>
+          )}
+        </>
+      )}
+
+      {/* Collapsed: show explore items inline */}
+      {exploreSections.length > 0 && collapsed && (
+        <>
+          {(exploreSections || []).flatMap(s => s.items || []).map((item) => (
+            <SidebarItem
+              key={item.key}
+              item={item}
+              isActive={selectedKeys.includes(item.key)}
+              collapsed={collapsed}
+              onClick={onNavigate}
+            />
+          ))}
+        </>
+      )}
     </div>
   );
 }
