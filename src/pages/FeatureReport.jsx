@@ -6,7 +6,7 @@ import useProject from '../hooks/useProject';
 import useFeatureReportData from '../hooks/useFeatureReportData';
 import FeatureMatrix from '../components/feature-report/FeatureMatrix';
 import GapAnalysis from '../components/feature-report/GapAnalysis';
-import MessagingPlaybook from '../components/feature-report/MessagingPlaybook';
+
 import Spinner from '../components/report/ui/Spinner';
 import PillTabs from '../components/report/ui/PillTabs';
 
@@ -65,7 +65,7 @@ export default function FeatureReport() {
   if (!data) return null;
 
   // Normalize LLM data: unwrap object-wrapped arrays
-  const arrayKeys = ['feature_matrix', 'gap_analysis', 'messaging_playbook'];
+  const arrayKeys = ['feature_matrix', 'gap_analysis'];
   for (const key of arrayKeys) {
     const val = data[key];
     if (val && !Array.isArray(val) && typeof val === 'object') {
@@ -78,7 +78,6 @@ export default function FeatureReport() {
   const tabs = [
     { key: 'matrix', label: 'Feature Matrix' },
     { key: 'gaps', label: 'Gap Analysis' },
-    { key: 'messaging', label: 'Competitor Messaging Playbook' },
   ];
 
   return (
@@ -119,15 +118,6 @@ export default function FeatureReport() {
         </div>
         <div className={`tab-section${activeTab === 'gaps' ? '' : ' tab-section-hidden'}`}>
           {data.gap_analysis && <GapAnalysis data={data.gap_analysis} />}
-        </div>
-        <div className={`tab-section${activeTab === 'messaging' ? '' : ' tab-section-hidden'}`}>
-          {data.messaging_playbook?.length > 0
-            ? <MessagingPlaybook data={data.messaging_playbook} meta={meta} />
-            : <div className="card" style={{ textAlign: 'center', padding: '3rem 2rem', color: 'var(--gray-400)' }}>
-                <p style={{ fontSize: '1rem', fontWeight: 500 }}>Competitor Messaging Playbook data not yet available</p>
-                <p style={{ fontSize: '0.85rem' }}>Try regenerating the report to generate this section.</p>
-              </div>
-          }
         </div>
       </div>
 
