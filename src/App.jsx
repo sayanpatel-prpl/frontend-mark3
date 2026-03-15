@@ -180,7 +180,9 @@ function getPrimarySections(tenantConfig = {}) {
 /**
  * Explore sections — 100% preview, shown in collapsible "Explore Upcoming" drawer.
  */
-function getExploreSections() {
+function getExploreSections(tenantConfig = {}) {
+  if (tenantConfig.consumer_durables) return [];
+
   return [
     {
       key: 'competitive-feed',
@@ -195,17 +197,6 @@ function getExploreSections() {
       items: [
         { key: '/competitor-profiles', icon: <Target size={16} />, label: 'Profiles', preview: true },
         { key: '/competitor-discovery', icon: <Search size={16} />, label: 'Discovery', preview: true },
-      ],
-    },
-    {
-      key: 'marketing-intel',
-      label: 'Marketing Intelligence',
-      items: [
-        { key: '/positioning', icon: <PenTool size={16} />, label: 'Positioning', preview: true },
-        { key: '/website-traffic', icon: <Globe size={16} />, label: 'Traffic & SEO', preview: true },
-        { key: '/content-intel', icon: <FileText size={16} />, label: 'Content Intel', preview: true },
-        { key: '/paid-channels', icon: <BarChart3 size={16} />, label: 'Paid Channels', preview: true },
-        { key: '/aeo', icon: <Search size={16} />, label: 'AEO', preview: true },
       ],
     },
     {
@@ -246,7 +237,7 @@ function getPinnedItems(user) {
 
 const REPORT_PAGE_ROUTES = [
   '/review-report', '/feature-matrix', '/claims-comparison', '/integrations',
-  '/social-proof', '/faq-intel', '/news-momentum',
+  '/social-proof', '/faq-intel', '/news-momentum', '/messaging-playbook',
   // Preview pages also get full-width layout
   '/gap-analysis', '/pricing-tracker',
   '/battle-cards', '/competitive-advantages', '/win-loss',
@@ -414,8 +405,8 @@ function AppLayout({ user, activeTenantId, onTenantChange, onLogout, tenantConfi
 
           {/* Main nav — hierarchical sidebar */}
           <SortableSidebar
-            sections={getPrimarySections()}
-            exploreSections={getExploreSections()}
+            sections={getPrimarySections(tenantConfig)}
+            exploreSections={getExploreSections(tenantConfig)}
             pinnedItems={getPinnedItems(user)}
             userId={user.id}
             collapsed={collapsed}
@@ -667,6 +658,19 @@ function App() {
           <Route path="/settings-integrations" element={<IntegrationsPreview />} />
           <Route path="/settings-team" element={<TeamWorkspacePreview />} />
           <Route path="/settings-account" element={<AccountPreview />} />
+
+          {/* Consumer Durables Intel routes */}
+          <Route path="/intel/executive-snapshot" element={<ExecutiveSnapshotPage />} />
+          <Route path="/intel/market-pulse" element={<MarketPulsePage />} />
+          <Route path="/intel/financial-performance" element={<FinancialPerformancePage />} />
+          <Route path="/intel/transcript-intel" element={<TranscriptIntelPage />} />
+          <Route path="/intel/deals" element={<DealsPage />} />
+          <Route path="/intel/competitive-moves" element={<CompetitiveMovesPage />} />
+          <Route path="/intel/leadership" element={<LeadershipPage />} />
+          <Route path="/intel/deep-dive" element={<DeepDivePage />} />
+          <Route path="/intel/advisory-pipeline" element={<AdvisoryPipelinePage />} />
+          <Route path="/intel/action-lens" element={<ActionLensPage />} />
+          <Route path="/intel/watchlist" element={<WatchlistPage />} />
 
           {/* Legacy routes — resolve correct project ID */}
           <Route path="/projects/:id/report" element={<ProjectRedirect />} />
