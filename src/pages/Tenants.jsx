@@ -53,6 +53,7 @@ export default function Tenants() {
       headquarters: tenant.headquarters || '',
       employee_count: tenant.employee_count || null,
       founded_year: tenant.founded_year || null,
+      consumer_durables: tenant.consumer_durables || false,
     });
     setModalOpen(true);
   };
@@ -84,6 +85,10 @@ export default function Tenants() {
     { title: 'Headquarters', dataIndex: 'headquarters', key: 'headquarters', render: (v) => v || '-' },
     { title: 'Employees', dataIndex: 'employee_count', key: 'employees', render: (v) => v || '-' },
     { title: 'Founded', dataIndex: 'founded_year', key: 'founded', render: (v) => v || '-' },
+    {
+      title: 'Consumer Durables', dataIndex: 'consumer_durables', key: 'consumer_durables',
+      render: (v) => v ? <Tag color="blue">Enabled</Tag> : <Tag>Off</Tag>,
+    },
     {
       title: 'Status', dataIndex: 'is_active', key: 'status',
       render: (active) => <Tag color={active ? 'green' : 'red'}>{active ? 'Active' : 'Inactive'}</Tag>,
@@ -165,6 +170,9 @@ export default function Tenants() {
               <InputNumber style={{ width: '100%' }} min={1800} max={new Date().getFullYear()} />
             </Form.Item>
           </div>
+          <Form.Item label="Consumer Durables Intel" name="consumer_durables" valuePropName="checked">
+            <Switch />
+          </Form.Item>
         </Form>
       </Modal>
 

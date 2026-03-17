@@ -16,8 +16,46 @@ import IntegrationCoveragePage from './pages/IntegrationCoveragePage';
 import CustomerRecognitionPage from './pages/CustomerRecognitionPage';
 import FAQIntelligencePage from './pages/FAQIntelligencePage';
 import NewsMomentumPage from './pages/NewsMomentumPage';
+import MessagingPlaybookPage from './pages/MessagingPlaybookPage';
 import TenantSelector from './components/TenantSelector';
 import SortableSidebar from './components/SortableSidebar';
+import {
+  ExecutiveSnapshotPage, MarketPulsePage, FinancialPerformancePage,
+  TranscriptIntelPage, DealsPage, CompetitiveMovesPage,
+  LeadershipPage, DeepDivePage, AdvisoryPipelinePage,
+  ActionLensPage, WatchlistPage,
+} from './pages/IntelDashboard';
+import { tenantApi } from './services/api';
+
+// Preview page imports
+import GapAnalysisPreview from './pages/coming-soon/GapAnalysisPreview';
+import PricingTrackerPreview from './pages/coming-soon/PricingTrackerPreview';
+import BattleCardsPreview from './pages/coming-soon/BattleCardsPreview';
+import CompetitiveAdvantagesPreview from './pages/coming-soon/CompetitiveAdvantagesPreview';
+import WinLossPreview from './pages/coming-soon/WinLossPreview';
+import ReviewBreakdownPreview from './pages/coming-soon/ReviewBreakdownPreview';
+import SentimentTrendsPreview from './pages/coming-soon/SentimentTrendsPreview';
+import ReviewHeatmapsPreview from './pages/coming-soon/ReviewHeatmapsPreview';
+import SocialListeningPreview from './pages/coming-soon/SocialListeningPreview';
+import PartnershipsPreview from './pages/coming-soon/PartnershipsPreview';
+import HiringIntelPreview from './pages/coming-soon/HiringIntelPreview';
+import OrgStructurePreview from './pages/coming-soon/OrgStructurePreview';
+import LiveFeedPreview from './pages/coming-soon/LiveFeedPreview';
+import CompetitorProfilesPreview from './pages/coming-soon/CompetitorProfilesPreview';
+import CompetitorDiscoveryPreview from './pages/coming-soon/CompetitorDiscoveryPreview';
+import PositioningPreview from './pages/coming-soon/PositioningPreview';
+import WebsiteTrafficPreview from './pages/coming-soon/WebsiteTrafficPreview';
+import ContentIntelPreview from './pages/coming-soon/ContentIntelPreview';
+import PaidChannelsPreview from './pages/coming-soon/PaidChannelsPreview';
+import AEOPreview from './pages/coming-soon/AEOPreview';
+import StrategyTimelinePreview from './pages/coming-soon/StrategyTimelinePreview';
+import StrategicInsightsPreview from './pages/coming-soon/StrategicInsightsPreview';
+import WeeklyDigestPreview from './pages/coming-soon/WeeklyDigestPreview';
+import CustomReportsPreview from './pages/coming-soon/CustomReportsPreview';
+import AlertConfigPreview from './pages/coming-soon/AlertConfigPreview';
+import IntegrationsPreview from './pages/coming-soon/IntegrationsPreview';
+import TeamWorkspacePreview from './pages/coming-soon/TeamWorkspacePreview';
+import AccountPreview from './pages/coming-soon/AccountPreview';
 
 const { Sider, Content } = Layout;
 
@@ -36,32 +74,61 @@ function getTierLabel(tier) {
   return 'User';
 }
 
-function getSidebarSections() {
+/**
+ * Primary sidebar sections — sections with at least 1 live item.
+ * Live items sorted first, preview items after.
+ */
+function getPrimarySections(tenantConfig = {}) {
+  if (tenantConfig.consumer_durables) {
+    return [
+      {
+        key: 'cd-overview',
+        label: 'Overview',
+        items: [
+          { key: '/intel/executive-snapshot', icon: <Target size={16} />, label: 'Executive Snapshot' },
+          { key: '/intel/market-pulse', icon: <Activity size={16} />, label: 'Market Pulse' },
+          { key: '/intel/financial-performance', icon: <BarChart3 size={16} />, label: 'Financial Performance' },
+          { key: '/intel/transcript-intel', icon: <FileText size={16} />, label: 'Transcript Intel' },
+        ],
+      },
+      {
+        key: 'cd-analysis',
+        label: 'Analysis',
+        items: [
+          { key: '/intel/deals', icon: <DollarSign size={16} />, label: 'Deals & Transactions' },
+          { key: '/intel/competitive-moves', icon: <Swords size={16} />, label: 'Competitive Moves' },
+          { key: '/intel/leadership', icon: <Shield size={16} />, label: 'Leadership & Governance' },
+        ],
+      },
+      {
+        key: 'cd-strategy',
+        label: 'Strategy',
+        items: [
+          { key: '/intel/deep-dive', icon: <Search size={16} />, label: 'Sub-Sector Deep Dive' },
+          { key: '/intel/advisory-pipeline', icon: <TrendingUp size={16} />, label: 'Advisory Pipeline' },
+          { key: '/intel/action-lens', icon: <Users size={16} />, label: 'Action Lens' },
+        ],
+      },
+      {
+        key: 'cd-signals',
+        label: 'Signals',
+        items: [
+          { key: '/intel/watchlist', icon: <AlertTriangle size={16} />, label: 'Watchlist & Forward Indicators' },
+        ],
+      },
+    ];
+  }
+
   return [
-    {
-      key: 'competitive-feed',
-      label: 'Competitive Feed',
-      items: [
-        { key: '/competitive-feed', icon: <Activity size={16} />, label: 'Live Feed', comingSoon: true },
-      ],
-    },
-    {
-      key: 'competitors',
-      label: 'Competitors',
-      items: [
-        { key: '/competitor-profiles', icon: <Target size={16} />, label: 'Competitor Profiles', comingSoon: true },
-        { key: '/competitor-discovery', icon: <Search size={16} />, label: 'Competitor Discovery', comingSoon: true },
-      ],
-    },
     {
       key: 'marketing-intel',
       label: 'Marketing Intelligence',
       items: [
-        { key: '/positioning', icon: <PenTool size={16} />, label: 'Positioning & Messaging', comingSoon: true },
-        { key: '/website-traffic', icon: <Globe size={16} />, label: 'Website Traffic & SEO', comingSoon: true },
-        { key: '/content-intel', icon: <FileText size={16} />, label: 'Content & Blog Intelligence', comingSoon: true },
-        { key: '/paid-channels', icon: <BarChart3 size={16} />, label: 'Paid Channels Overview', comingSoon: true },
-        { key: '/aeo', icon: <Search size={16} />, label: 'AEO', comingSoon: true },
+        { key: '/messaging-playbook', icon: <PenTool size={16} />, label: 'Competitor Messaging Playbook' },
+        { key: '/website-traffic', icon: <Globe size={16} />, label: 'Traffic & SEO', preview: true },
+        { key: '/content-intel', icon: <FileText size={16} />, label: 'Content Intel', preview: true },
+        { key: '/paid-channels', icon: <BarChart3 size={16} />, label: 'Paid Channels', preview: true },
+        { key: '/aeo', icon: <Search size={16} />, label: 'AEO', preview: true },
       ],
     },
     {
@@ -70,19 +137,19 @@ function getSidebarSections() {
       items: [
         { key: '/feature-matrix', icon: <LayoutGrid size={16} />, label: 'Feature Matrix' },
         { key: '/integrations', icon: <Plug size={16} />, label: 'Integration Coverage' },
-        { key: '/gap-analysis', icon: <Package size={16} />, label: 'Feature & Integration Gap Analysis', comingSoon: true },
-        { key: '/pricing-tracker', icon: <DollarSign size={16} />, label: 'Pricing Tracker', comingSoon: true },
         { key: '/faq-intel', icon: <HelpCircle size={16} />, label: 'FAQ Intelligence' },
+        { key: '/gap-analysis', icon: <Package size={16} />, label: 'Gap Analysis', preview: true },
+        { key: '/pricing-tracker', icon: <DollarSign size={16} />, label: 'Pricing Tracker', preview: true },
       ],
     },
     {
       key: 'sales-enablement',
       label: 'Sales Enablement',
       items: [
-        { key: '/battle-cards', icon: <Swords size={16} />, label: 'Battle Cards', comingSoon: true },
-        { key: '/competitive-advantages', icon: <Trophy size={16} />, label: 'Competitive Advantages', comingSoon: true },
         { key: '/claims-comparison', icon: <Scale size={16} />, label: 'Claims Comparison' },
-        { key: '/win-loss', icon: <AlertTriangle size={16} />, label: 'Win/Loss Signals', comingSoon: true },
+        { key: '/battle-cards', icon: <Swords size={16} />, label: 'Battle Cards', preview: true },
+        { key: '/competitive-advantages', icon: <Trophy size={16} />, label: 'Competitive Advantages', preview: true },
+        { key: '/win-loss', icon: <AlertTriangle size={16} />, label: 'Win/Loss Signals', preview: true },
       ],
     },
     {
@@ -90,9 +157,9 @@ function getSidebarSections() {
       label: 'Review Intelligence',
       items: [
         { key: '/review-report', icon: <FileText size={16} />, label: 'Market Overview' },
-        { key: '/review-breakdown', icon: <ClipboardCheck size={16} />, label: 'Per-Competitor Breakdown', comingSoon: true },
-        { key: '/sentiment-trends', icon: <TrendingUp size={16} />, label: 'Sentiment Trends & NPS', comingSoon: true },
-        { key: '/review-heatmaps', icon: <BarChart3 size={16} />, label: 'Review Heat Maps', comingSoon: true },
+        { key: '/review-breakdown', icon: <ClipboardCheck size={16} />, label: 'Per-Competitor Breakdown', preview: true },
+        { key: '/sentiment-trends', icon: <TrendingUp size={16} />, label: 'Sentiment Trends & NPS', preview: true },
+        { key: '/review-heatmaps', icon: <BarChart3 size={16} />, label: 'Review Heat Maps', preview: true },
       ],
     },
     {
@@ -101,36 +168,61 @@ function getSidebarSections() {
       items: [
         { key: '/news-momentum', icon: <Newspaper size={16} />, label: 'News & Momentum' },
         { key: '/social-proof', icon: <Award size={16} />, label: 'Customer Recognition' },
-        { key: '/social-listening', icon: <Globe size={16} />, label: 'Social Listening', comingSoon: true },
-        { key: '/partnerships', icon: <Plug size={16} />, label: 'Partnerships & Announcements', comingSoon: true },
-        { key: '/hiring-intel', icon: <Users size={16} />, label: 'Hiring Intelligence', comingSoon: true },
-        { key: '/org-structure', icon: <Building2 size={16} />, label: 'Organisation Structure', comingSoon: true },
+        { key: '/social-listening', icon: <Globe size={16} />, label: 'Social Listening', preview: true },
+        { key: '/partnerships', icon: <Plug size={16} />, label: 'Partnerships', preview: true },
+        { key: '/hiring-intel', icon: <Users size={16} />, label: 'Hiring Intel', preview: true },
+        { key: '/org-structure', icon: <Building2 size={16} />, label: 'Org Structure', preview: true },
+      ],
+    },
+  ];
+}
+
+/**
+ * Explore sections — 100% preview, shown in collapsible "Explore Upcoming" drawer.
+ */
+function getExploreSections(tenantConfig = {}) {
+  if (tenantConfig.consumer_durables) return [];
+
+  return [
+    {
+      key: 'competitive-feed',
+      label: 'Competitive Feed',
+      items: [
+        { key: '/competitive-feed', icon: <Activity size={16} />, label: 'Live Feed', preview: true },
+      ],
+    },
+    {
+      key: 'competitors',
+      label: 'Competitors',
+      items: [
+        { key: '/competitor-profiles', icon: <Target size={16} />, label: 'Profiles', preview: true },
+        { key: '/competitor-discovery', icon: <Search size={16} />, label: 'Discovery', preview: true },
       ],
     },
     {
       key: 'strategy',
       label: 'Strategy',
       items: [
-        { key: '/strategy-timeline', icon: <LineChart size={16} />, label: 'Strategy Timeline', comingSoon: true },
-        { key: '/strategic-insights', icon: <TrendingUp size={16} />, label: 'Strategic Insights', comingSoon: true },
+        { key: '/strategy-timeline', icon: <LineChart size={16} />, label: 'Timeline', preview: true },
+        { key: '/strategic-insights', icon: <TrendingUp size={16} />, label: 'Insights', preview: true },
       ],
     },
     {
       key: 'reports-alerts',
       label: 'Reports & Alerts',
       items: [
-        { key: '/weekly-digest', icon: <FileText size={16} />, label: 'Weekly Digest', comingSoon: true },
-        { key: '/custom-reports', icon: <ClipboardCheck size={16} />, label: 'Custom Reports', comingSoon: true },
-        { key: '/alert-config', icon: <Bell size={16} />, label: 'Alert Configuration', comingSoon: true },
+        { key: '/weekly-digest', icon: <FileText size={16} />, label: 'Digest', preview: true },
+        { key: '/custom-reports', icon: <ClipboardCheck size={16} />, label: 'Custom Reports', preview: true },
+        { key: '/alert-config', icon: <Bell size={16} />, label: 'Alerts', preview: true },
       ],
     },
     {
       key: 'settings',
       label: 'Settings',
       items: [
-        { key: '/settings-integrations', icon: <Sliders size={16} />, label: 'Integrations', comingSoon: true },
-        { key: '/settings-team', icon: <UserCog size={16} />, label: 'Team & Workspace', comingSoon: true },
-        { key: '/settings-account', icon: <CreditCard size={16} />, label: 'Account', comingSoon: true },
+        { key: '/settings-integrations', icon: <Sliders size={16} />, label: 'Integrations', preview: true },
+        { key: '/settings-team', icon: <UserCog size={16} />, label: 'Team', preview: true },
+        { key: '/settings-account', icon: <CreditCard size={16} />, label: 'Account', preview: true },
       ],
     },
   ];
@@ -145,7 +237,18 @@ function getPinnedItems(user) {
 
 const REPORT_PAGE_ROUTES = [
   '/review-report', '/feature-matrix', '/claims-comparison', '/integrations',
-  '/social-proof', '/faq-intel', '/news-momentum',
+  '/social-proof', '/faq-intel', '/news-momentum', '/messaging-playbook',
+  // Preview pages also get full-width layout
+  '/gap-analysis', '/pricing-tracker',
+  '/battle-cards', '/competitive-advantages', '/win-loss',
+  '/review-breakdown', '/sentiment-trends', '/review-heatmaps',
+  '/social-listening', '/partnerships', '/hiring-intel', '/org-structure',
+  '/competitive-feed',
+  '/competitor-profiles', '/competitor-discovery',
+  '/positioning', '/website-traffic', '/content-intel', '/paid-channels', '/aeo',
+  '/strategy-timeline', '/strategic-insights',
+  '/weekly-digest', '/custom-reports', '/alert-config',
+  '/settings-integrations', '/settings-team', '/settings-account',
 ];
 
 function getSelectedKeys(pathname) {
@@ -160,7 +263,7 @@ function isFullWidthPage(pathname) {
   return REPORT_PAGE_ROUTES.some((r) => pathname === r);
 }
 
-function AppLayout({ user, activeTenantId, onTenantChange, onLogout, children }) {
+function AppLayout({ user, activeTenantId, onTenantChange, onLogout, tenantConfig, children }) {
   const navigate = useNavigate();
   const location = useLocation();
   const { token } = theme.useToken();
@@ -302,7 +405,8 @@ function AppLayout({ user, activeTenantId, onTenantChange, onLogout, children })
 
           {/* Main nav — hierarchical sidebar */}
           <SortableSidebar
-            sections={getSidebarSections()}
+            sections={getPrimarySections(tenantConfig)}
+            exploreSections={getExploreSections(tenantConfig)}
             pinnedItems={getPinnedItems(user)}
             userId={user.id}
             collapsed={collapsed}
@@ -406,6 +510,7 @@ const INACTIVITY_TIMEOUT = 30 * 60 * 1000; // 30 minutes
 function App() {
   const [user, setUser] = useState(null);
   const [activeTenantId, setActiveTenantId] = useState(null);
+  const [tenantConfig, setTenantConfig] = useState({});
   const [loading, setLoading] = useState(true);
   const timerRef = useRef(null);
 
@@ -467,6 +572,17 @@ function App() {
     setLoading(false);
   }, []);
 
+  // Fetch tenant config (feature flags) whenever active tenant changes
+  useEffect(() => {
+    if (!activeTenantId || !user) {
+      setTenantConfig({});
+      return;
+    }
+    tenantApi.getConfig()
+      .then(setTenantConfig)
+      .catch(() => setTenantConfig({}));
+  }, [activeTenantId, user]);
+
   const handleLogin = (userData) => {
     userData.tier = computeTier(userData);
     localStorage.setItem('user', JSON.stringify(userData));
@@ -500,9 +616,9 @@ function App() {
 
   return (
     <BrowserRouter>
-      <AppLayout user={user} activeTenantId={activeTenantId} onTenantChange={handleTenantChange} onLogout={() => { setUser(null); setActiveTenantId(null); }}>
+      <AppLayout user={user} activeTenantId={activeTenantId} onTenantChange={handleTenantChange} onLogout={() => { setUser(null); setActiveTenantId(null); }} tenantConfig={tenantConfig}>
         <Routes>
-          {/* New direct-navigation routes */}
+          {/* Live page routes */}
           <Route path="/review-report" element={<ProjectRedirect />} />
           <Route path="/feature-matrix" element={<FeatureReport />} />
           <Route path="/claims-comparison" element={<ClaimsAuditPage />} />
@@ -511,6 +627,50 @@ function App() {
           <Route path="/social-proof" element={<CustomerRecognitionPage />} />
           <Route path="/faq-intel" element={<FAQIntelligencePage />} />
           <Route path="/news-momentum" element={<NewsMomentumPage />} />
+          <Route path="/messaging-playbook" element={<MessagingPlaybookPage />} />
+
+          {/* Preview page routes */}
+          <Route path="/gap-analysis" element={<GapAnalysisPreview />} />
+          <Route path="/pricing-tracker" element={<PricingTrackerPreview />} />
+          <Route path="/battle-cards" element={<BattleCardsPreview />} />
+          <Route path="/competitive-advantages" element={<CompetitiveAdvantagesPreview />} />
+          <Route path="/win-loss" element={<WinLossPreview />} />
+          <Route path="/review-breakdown" element={<ReviewBreakdownPreview />} />
+          <Route path="/sentiment-trends" element={<SentimentTrendsPreview />} />
+          <Route path="/review-heatmaps" element={<ReviewHeatmapsPreview />} />
+          <Route path="/social-listening" element={<SocialListeningPreview />} />
+          <Route path="/partnerships" element={<PartnershipsPreview />} />
+          <Route path="/hiring-intel" element={<HiringIntelPreview />} />
+          <Route path="/org-structure" element={<OrgStructurePreview />} />
+          <Route path="/competitive-feed" element={<LiveFeedPreview />} />
+          <Route path="/competitor-profiles" element={<CompetitorProfilesPreview />} />
+          <Route path="/competitor-discovery" element={<CompetitorDiscoveryPreview />} />
+          <Route path="/positioning" element={<PositioningPreview />} />
+          <Route path="/website-traffic" element={<WebsiteTrafficPreview />} />
+          <Route path="/content-intel" element={<ContentIntelPreview />} />
+          <Route path="/paid-channels" element={<PaidChannelsPreview />} />
+          <Route path="/aeo" element={<AEOPreview />} />
+          <Route path="/strategy-timeline" element={<StrategyTimelinePreview />} />
+          <Route path="/strategic-insights" element={<StrategicInsightsPreview />} />
+          <Route path="/weekly-digest" element={<WeeklyDigestPreview />} />
+          <Route path="/custom-reports" element={<CustomReportsPreview />} />
+          <Route path="/alert-config" element={<AlertConfigPreview />} />
+          <Route path="/settings-integrations" element={<IntegrationsPreview />} />
+          <Route path="/settings-team" element={<TeamWorkspacePreview />} />
+          <Route path="/settings-account" element={<AccountPreview />} />
+
+          {/* Consumer Durables Intel routes */}
+          <Route path="/intel/executive-snapshot" element={<ExecutiveSnapshotPage />} />
+          <Route path="/intel/market-pulse" element={<MarketPulsePage />} />
+          <Route path="/intel/financial-performance" element={<FinancialPerformancePage />} />
+          <Route path="/intel/transcript-intel" element={<TranscriptIntelPage />} />
+          <Route path="/intel/deals" element={<DealsPage />} />
+          <Route path="/intel/competitive-moves" element={<CompetitiveMovesPage />} />
+          <Route path="/intel/leadership" element={<LeadershipPage />} />
+          <Route path="/intel/deep-dive" element={<DeepDivePage />} />
+          <Route path="/intel/advisory-pipeline" element={<AdvisoryPipelinePage />} />
+          <Route path="/intel/action-lens" element={<ActionLensPage />} />
+          <Route path="/intel/watchlist" element={<WatchlistPage />} />
 
           {/* Legacy routes — resolve correct project ID */}
           <Route path="/projects/:id/report" element={<ProjectRedirect />} />

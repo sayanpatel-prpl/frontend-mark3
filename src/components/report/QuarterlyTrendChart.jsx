@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useLayoutEffect } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 
 const COLORS = ['#C9A84C', '#059669', '#D97706', '#DC2626', '#2563EB', '#7C3AED', '#ec4899', '#14b8a6'];
@@ -35,6 +35,14 @@ function ReviewVolumeChart({ quarterlyTrend }) {
 
   const selectedDays = PERIOD_OPTIONS.find(p => p.key === period)?.days || 360;
 
+  // Assign colors by company id so they stay stable across filter changes
+  const colorMap = useMemo(() => {
+    if (!series?.length) return {};
+    const map = {};
+    series.forEach((s, i) => { map[s.id] = COLORS[i % COLORS.length]; });
+    return map;
+  }, [series]);
+
   const { filteredQuarters, companyTotals } = useMemo(() => {
     if (!quarters?.length || !series?.length) return { filteredQuarters: [], companyTotals: [] };
 
@@ -61,6 +69,46 @@ function ReviewVolumeChart({ quarterlyTrend }) {
 
     return { filteredQuarters: filtered, companyTotals: totals };
   }, [quarters, series, selectedDays]);
+
+  // FLIP animation: track previous positions of each row by company id
+  const ROW_HEIGHT = 32; // height + gap
+  const containerRef = useRef(null);
+  const prevOrderRef = useRef([]); // previous id order
+  const rowRefs = useRef({});
+  const isFirstRender = useRef(true);
+
+  useLayoutEffect(() => {
+    if (!companyTotals.length) return;
+
+    const currentOrder = companyTotals.map(c => c.id);
+    const prevOrder = prevOrderRef.current;
+
+    if (isFirstRender.current || prevOrder.length === 0) {
+      isFirstRender.current = false;
+      prevOrderRef.current = currentOrder;
+      return;
+    }
+
+    // Calculate position deltas and animate
+    currentOrder.forEach((id, newIndex) => {
+      const oldIndex = prevOrder.indexOf(id);
+      const el = rowRefs.current[id];
+      if (!el || oldIndex === -1) return;
+
+      const delta = (oldIndex - newIndex) * ROW_HEIGHT;
+      if (delta === 0) return;
+
+      // FLIP: set to old position instantly, then animate to new
+      el.style.transition = 'none';
+      el.style.transform = `translateY(${delta}px)`;
+      // Force reflow
+      el.getBoundingClientRect();
+      el.style.transition = 'transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+      el.style.transform = 'translateY(0)';
+    });
+
+    prevOrderRef.current = currentOrder;
+  }, [companyTotals]);
 
   if (!companyTotals.length) return null;
 
@@ -93,9 +141,13 @@ function ReviewVolumeChart({ quarterlyTrend }) {
       <p style={{ fontSize: '0.8125rem', color: 'var(--gray-500)', marginBottom: '1rem' }}>
         Total reviews per company — quarters: {filteredQuarters.join(', ')}
       </p>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        {companyTotals.map((c, i) => (
-          <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+      <div ref={containerRef} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {companyTotals.map((c) => (
+          <div
+            key={c.id}
+            ref={el => { rowRefs.current[c.id] = el; }}
+            style={{ display: 'flex', alignItems: 'center', gap: 12, height: 24 }}
+          >
             <span style={{
               fontSize: '0.8125rem',
               fontWeight: c.isMain ? 600 : 400,
@@ -109,14 +161,14 @@ function ReviewVolumeChart({ quarterlyTrend }) {
               <div style={{
                 width: `${(c.total / maxTotal) * 100}%`,
                 height: '100%',
-                background: COLORS[i % COLORS.length],
+                background: colorMap[c.id] || COLORS[0],
                 borderRadius: 4,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'flex-end',
                 paddingRight: 8,
                 minWidth: c.total > 0 ? 40 : 0,
-                transition: 'width 0.3s ease',
+                transition: 'width 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
               }}>
                 <span style={{ fontSize: '0.6875rem', fontWeight: 700, color: '#fff' }}>
                   {c.total.toLocaleString()}
