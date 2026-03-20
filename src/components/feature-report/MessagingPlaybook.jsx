@@ -150,6 +150,76 @@ export default function MessagingPlaybook({ data, meta }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
 
+      {/* ── WHAT TO DO NEXT — actions first ── */}
+      {hasCounter && (() => {
+        const mainName = (meta?.main_company?.name || '').toLowerCase();
+        const competitors = data.filter(comp => comp.company.toLowerCase() !== mainName);
+
+        return (
+          <div className="card" style={{ padding: 20, marginBottom: 14 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+              <h3 className="section-title" style={{ margin: 0 }}>What To Do Next</h3>
+              <span style={{ padding: '3px 10px', borderRadius: 4, fontSize: '0.68rem', fontWeight: 700, background: '#FEE2E2', color: '#991B1B', border: '1px solid #FECACA' }}>
+                {competitors.length} competitors
+              </span>
+            </div>
+            <p style={{ color: 'var(--gray-500)', fontSize: '0.78rem', marginBottom: 16 }}>How to position against each competitor — use in deals, battle cards, and sales calls</p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {competitors.map((comp, ci) => {
+                const points = comp.counter_points || (comp.counter_strategy ? [comp.counter_strategy] : []);
+                if (points.length === 0) return null;
+                return (
+                  <div key={ci} style={{
+                    borderRadius: 8, border: '1px solid var(--gray-200)', borderLeft: '4px solid var(--azure)',
+                    background: '#fff', overflow: 'hidden',
+                  }}>
+                    <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--gray-100)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <CompanyLogo name={comp.company} logoUrl={logoMap[comp.company]} size={20} />
+                      <span style={{ fontWeight: 700, color: 'var(--navy)', fontSize: '0.88rem' }}>vs {comp.company}</span>
+                    </div>
+                    <div style={{ padding: '12px 16px' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                        {points.map((p, pi) => {
+                          const raw = typeof p === 'string' ? p : p.point || p;
+                          let point = raw;
+                          let evidence = typeof p === 'object' ? p.evidence : null;
+                          if (!evidence && typeof raw === 'string' && raw.includes(' — ')) {
+                            const parts = raw.split(' — ');
+                            point = parts[0];
+                            evidence = parts.slice(1).join(' — ');
+                          }
+                          return (
+                            <div key={pi} style={{
+                              display: 'flex', alignItems: 'flex-start', gap: 10,
+                              padding: '8px 12px', borderRadius: 6,
+                              border: '1px solid var(--gray-200)', background: '#fff',
+                            }}>
+                              <div style={{
+                                minWidth: 22, height: 22, borderRadius: '50%',
+                                background: 'var(--azure)', color: '#fff',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                fontSize: '0.68rem', fontWeight: 800, flexShrink: 0, marginTop: 1,
+                              }}>{pi + 1}</div>
+                              <div style={{ flex: 1 }}>
+                                <div style={{ fontSize: '0.84rem', fontWeight: 600, color: 'var(--navy)', lineHeight: 1.4 }}>{point}</div>
+                                {evidence && (
+                                  <div style={{ fontSize: '0.72rem', color: 'var(--gray-500)', marginTop: 3, lineHeight: 1.4 }}>{evidence}</div>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })()}
+
       {/* ── TAGLINE ── */}
       <SingleRowSection title="Tagline" subtitle="Exact homepage headline"
         companies={data} logoMap={logoMap}
@@ -243,77 +313,6 @@ export default function MessagingPlaybook({ data, meta }) {
         }}
       />
 
-      {/* ── COUNTER STRATEGY — compact table ── */}
-      {hasCounter && (() => {
-        const mainName = (meta?.main_company?.name || '').toLowerCase();
-        const rows = [];
-        data.filter(comp => comp.company.toLowerCase() !== mainName).forEach(comp => {
-          const rawPoints = comp.counter_points || (comp.counter_strategy ? [comp.counter_strategy] : []);
-          rawPoints.forEach(p => {
-            const obj = typeof p === 'string' ? { point: p } : p;
-            let displayPoint = obj.point || p;
-            let evidence = obj.evidence;
-            if (!evidence && typeof displayPoint === 'string' && displayPoint.includes(' — ')) {
-              const parts = displayPoint.split(' — ');
-              displayPoint = parts[0];
-              evidence = parts.slice(1).join(' — ');
-            }
-            rows.push({ company: comp.company, point: displayPoint, evidence });
-          });
-        });
-        if (rows.length === 0) return null;
-
-        return (
-          <div className="card" style={{ padding: 20, marginBottom: 14 }}>
-            <h3 className="section-title" style={{ marginBottom: 2 }}>Counter Strategy</h3>
-            <p style={{ color: 'var(--gray-500)', fontSize: '0.78rem', marginBottom: 14 }}>How to position against each competitor in deals</p>
-
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.82rem' }}>
-                <thead>
-                  <tr style={{ borderBottom: '2px solid var(--gray-200)' }}>
-                    <th style={{ textAlign: 'left', padding: '10px 12px', color: 'var(--gray-500)', fontWeight: 600, fontSize: '0.72rem', textTransform: 'uppercase', width: 130 }}>Against</th>
-                    <th style={{ textAlign: 'left', padding: '10px 12px', color: 'var(--gray-500)', fontWeight: 600, fontSize: '0.72rem', textTransform: 'uppercase' }}>Counter-Point</th>
-                    <th style={{ textAlign: 'left', padding: '10px 12px', color: 'var(--gray-500)', fontWeight: 600, fontSize: '0.72rem', textTransform: 'uppercase', width: '35%' }}>Evidence</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rows.map((row, i) => {
-                    const prevCompany = i > 0 ? rows[i - 1].company : null;
-                    const isNewCompany = row.company !== prevCompany;
-                    return (
-                      <tr key={i} style={{ borderBottom: '1px solid var(--gray-100)', borderTop: isNewCompany && i > 0 ? '2px solid var(--gray-200)' : 'none' }}>
-                        <td style={{ padding: '10px 12px', verticalAlign: 'top' }}>
-                          {isNewCompany && (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                              <CompanyLogo name={row.company} logoUrl={logoMap[row.company]} size={18} />
-                              <span style={{ fontWeight: 700, color: 'var(--navy)', fontSize: '0.82rem' }}>{row.company}</span>
-                            </div>
-                          )}
-                        </td>
-                        <td style={{ padding: '10px 12px', verticalAlign: 'top' }}>
-                          <div style={{ fontSize: '0.82rem', color: 'var(--navy)', lineHeight: 1.5, fontWeight: 600 }}>
-                            {row.point}
-                          </div>
-                        </td>
-                        <td style={{ padding: '10px 12px', verticalAlign: 'top' }}>
-                          {row.evidence ? (
-                            <div style={{ fontSize: '0.78rem', color: 'var(--gray-500)', lineHeight: 1.4 }}>
-                              {row.evidence}
-                            </div>
-                          ) : (
-                            <span style={{ color: 'var(--gray-300)', fontSize: '0.78rem' }}>—</span>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        );
-      })()}
     </div>
   );
 }
