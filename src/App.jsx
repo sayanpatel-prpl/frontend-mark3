@@ -46,8 +46,14 @@ import CompetitorDiscoveryPreview from './pages/coming-soon/CompetitorDiscoveryP
 import PositioningPreview from './pages/coming-soon/PositioningPreview';
 import WebsiteTrafficPreview from './pages/coming-soon/WebsiteTrafficPreview';
 import ContentIntelPreview from './pages/coming-soon/ContentIntelPreview';
+import ContentIntelPage from './pages/ContentIntelPage';
+import ContentIntelPageV2 from './pages/ContentIntelPageV2';
+import TrafficSEOPage from './pages/TrafficSEOPage';
+import MarketingOverviewPage from './pages/MarketingOverviewPage';
 import PaidChannelsPreview from './pages/coming-soon/PaidChannelsPreview';
+import PaidChannelsPage from './pages/PaidChannelsPage';
 import AEOPreview from './pages/coming-soon/AEOPreview';
+import AEOPage from './pages/AEOPage';
 import StrategyTimelinePreview from './pages/coming-soon/StrategyTimelinePreview';
 import StrategicInsightsPreview from './pages/coming-soon/StrategicInsightsPreview';
 import WeeklyDigestPreview from './pages/coming-soon/WeeklyDigestPreview';
@@ -124,11 +130,12 @@ function getPrimarySections(tenantConfig = {}) {
       key: 'marketing-intel',
       label: 'Marketing Intelligence',
       items: [
+        { key: '/marketing-overview', icon: <Activity size={16} />, label: 'Marketing Overview' },
         { key: '/messaging-playbook', icon: <PenTool size={16} />, label: 'Competitor Messaging Playbook' },
-        { key: '/website-traffic', icon: <Globe size={16} />, label: 'Traffic & SEO', preview: true },
-        { key: '/content-intel', icon: <FileText size={16} />, label: 'Content Intel', preview: true },
-        { key: '/paid-channels', icon: <BarChart3 size={16} />, label: 'Paid Channels', preview: true },
-        { key: '/aeo', icon: <Search size={16} />, label: 'AEO', preview: true },
+        { key: '/website-traffic', icon: <Globe size={16} />, label: 'Traffic & SEO' },
+        { key: '/content-intel', icon: <FileText size={16} />, label: 'Content Intel' },
+        { key: '/paid-channels', icon: <BarChart3 size={16} />, label: 'Paid Channels' },
+        { key: '/aeo', icon: <Search size={16} />, label: 'AEO' },
       ],
     },
     {
@@ -237,7 +244,7 @@ function getPinnedItems(user) {
 
 const REPORT_PAGE_ROUTES = [
   '/review-report', '/feature-matrix', '/claims-comparison', '/integrations',
-  '/social-proof', '/faq-intel', '/news-momentum', '/messaging-playbook',
+  '/social-proof', '/faq-intel', '/news-momentum', '/messaging-playbook', '/marketing-overview',
   // Preview pages also get full-width layout
   '/gap-analysis', '/pricing-tracker',
   '/battle-cards', '/competitive-advantages', '/win-loss',
@@ -508,7 +515,8 @@ function AppLayout({ user, activeTenantId, onTenantChange, onLogout, tenantConfi
 const INACTIVITY_TIMEOUT = 30 * 60 * 1000; // 30 minutes
 
 function App() {
-  const [user, setUser] = useState(null);
+  // TODO: TEMP — bypass auth for local dev preview. Restore to null before pushing.
+  const [user, setUser] = useState({ id: 'dev', name: 'Dev User', email: 'dev@kompete.ai', tier: 'kompete' });
   const [activeTenantId, setActiveTenantId] = useState(null);
   const [tenantConfig, setTenantConfig] = useState({});
   const [loading, setLoading] = useState(true);
@@ -627,6 +635,7 @@ function App() {
           <Route path="/social-proof" element={<CustomerRecognitionPage />} />
           <Route path="/faq-intel" element={<FAQIntelligencePage />} />
           <Route path="/news-momentum" element={<NewsMomentumPage />} />
+          <Route path="/marketing-overview" element={<MarketingOverviewPage />} />
           <Route path="/messaging-playbook" element={<MessagingPlaybookPage />} />
 
           {/* Preview page routes */}
@@ -646,10 +655,10 @@ function App() {
           <Route path="/competitor-profiles" element={<CompetitorProfilesPreview />} />
           <Route path="/competitor-discovery" element={<CompetitorDiscoveryPreview />} />
           <Route path="/positioning" element={<PositioningPreview />} />
-          <Route path="/website-traffic" element={<WebsiteTrafficPreview />} />
-          <Route path="/content-intel" element={<ContentIntelPreview />} />
-          <Route path="/paid-channels" element={<PaidChannelsPreview />} />
-          <Route path="/aeo" element={<AEOPreview />} />
+          <Route path="/website-traffic" element={<TrafficSEOPage />} />
+          <Route path="/content-intel" element={<ContentIntelPageV2 />} />
+          <Route path="/paid-channels" element={<PaidChannelsPage />} />
+          <Route path="/aeo" element={<AEOPage />} />
           <Route path="/strategy-timeline" element={<StrategyTimelinePreview />} />
           <Route path="/strategic-insights" element={<StrategicInsightsPreview />} />
           <Route path="/weekly-digest" element={<WeeklyDigestPreview />} />
