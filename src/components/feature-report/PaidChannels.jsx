@@ -805,9 +805,12 @@ export default function PaidChannels({ data, meta }) {
         ))}
       </div>
 
+      {/* Scorecard + Recommendations — always visible above tabs */}
+      <Scorecard data={data.scorecard} />
+      <Recommendations insights={data.recommendations} />
+
       {activeTab === 'overview' && (
         <>
-          <Scorecard data={data.scorecard} />
           <PaidActivityOverview activity={data.paid_activity} logoMap={logoMap} />
           <PaidActivityTrend trends={data.paid_trend} logoMap={logoMap} />
           <KeywordOverlap data={data.keyword_landscape} logoMap={logoMap} />
@@ -820,7 +823,6 @@ export default function PaidChannels({ data, meta }) {
           <AdThemeClusters themes={data.ad_themes} logoMap={logoMap} />
           <AdCopyTracker ads={data.ad_copies} logoMap={logoMap} />
           <LandingPageMonitor pages={data.landing_pages} logoMap={logoMap} />
-          <Recommendations insights={data.recommendations} />
         </>
       )}
     </div>

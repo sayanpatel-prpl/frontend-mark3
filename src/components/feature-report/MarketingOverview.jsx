@@ -254,11 +254,22 @@ function ConsolidatedGaps({ gaps }) {
 
 
 /* ═══════════════════════════════════════════════════════════════
-   4. CROSS-CHANNEL AI INSIGHTS — patterns across channels
-   This is the "so what" that no team sees individually
+   4. CROSS-CHANNEL INTELLIGENCE — inference → evidence → actions
+   Designed for future CRM/notification integration:
+   each action has an owner role and can be "launched" as a task
    ═══════════════════════════════════════════════════════════════ */
 function CrossChannelInsights({ insights }) {
+  const [expandedIdx, setExpandedIdx] = useState({});
   if (!insights || insights.length === 0) return null;
+
+  const ownerColors = {
+    'Content Lead': { bg: '#DBEAFE', color: '#1E40AF' },
+    'SEO Lead': { bg: '#D1FAE5', color: '#065F46' },
+    'Paid Media Manager': { bg: '#FEF3C7', color: '#92400E' },
+    'Product Marketing': { bg: '#F3E8FF', color: '#6B21A8' },
+    'Sales Enablement': { bg: '#FCE7F3', color: '#9D174D' },
+    'Marketing Director': { bg: '#FEE2E2', color: '#991B1B' },
+  };
 
   return (
     <div className="card" style={{ padding: 24, marginBottom: 24 }}>
@@ -266,41 +277,91 @@ function CrossChannelInsights({ insights }) {
         <h3 className="section-title" style={{ margin: 0 }}>Cross-Channel Intelligence</h3>
         <span style={{ padding: '3px 10px', borderRadius: 4, fontSize: '0.68rem', fontWeight: 700, background: '#FEF3C7', color: '#92400E', border: '1px solid #FDE68A' }}>AI-Generated</span>
       </div>
-      <p style={{ color: 'var(--gray-500)', fontSize: '0.82rem', marginBottom: 18 }}>Patterns spanning multiple channels — insights individual teams can't see in isolation</p>
+      <p style={{ color: 'var(--gray-500)', fontSize: '0.82rem', marginBottom: 20 }}>
+        Patterns spanning multiple channels — with launchable actions for your team
+      </p>
 
-      <div style={{ overflowX: 'auto' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.82rem' }}>
-          <thead>
-            <tr style={{ borderBottom: '2px solid var(--gray-200)' }}>
-              <th style={{ textAlign: 'left', padding: '10px 12px', color: 'var(--gray-500)', fontWeight: 600, fontSize: '0.72rem', textTransform: 'uppercase', width: 120 }}>Channels</th>
-              <th style={{ textAlign: 'left', padding: '10px 12px', color: 'var(--gray-500)', fontWeight: 600, fontSize: '0.72rem', textTransform: 'uppercase' }}>Insight</th>
-              <th style={{ textAlign: 'left', padding: '10px 12px', color: 'var(--gray-500)', fontWeight: 600, fontSize: '0.72rem', textTransform: 'uppercase', width: '35%' }}>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {insights.map((ins, i) => (
-              <tr key={i} style={{ borderBottom: '1px solid var(--gray-100)', verticalAlign: 'top' }}>
-                <td style={{ padding: '12px' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                    {ins.channels?.map((ch, ci) => {
-                      const cc = CHANNEL[ch] || { bg: 'var(--gray-100)', color: 'var(--gray-600)' };
-                      return (
-                        <span key={ci} style={{ padding: '2px 8px', borderRadius: 3, fontSize: '0.6rem', fontWeight: 700, background: cc.bg, color: cc.color, textTransform: 'uppercase', width: 'fit-content' }}>{ch}</span>
-                      );
-                    })}
-                  </div>
-                </td>
-                <td style={{ padding: '12px' }}>
-                  <div style={{ fontWeight: 700, color: 'var(--navy)', fontSize: '0.85rem', lineHeight: 1.4, marginBottom: 4 }}>{ins.pattern}</div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--gray-500)', lineHeight: 1.4 }}>{ins.evidence}</div>
-                </td>
-                <td style={{ padding: '12px' }}>
-                  <div style={{ fontSize: '0.82rem', color: 'var(--gray-700)', lineHeight: 1.4 }}>{ins.recommendation}</div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        {insights.map((ins, i) => {
+          const isOpen = expandedIdx[i];
+
+          return (
+            <div key={i} style={{
+              borderRadius: 8, border: '1px solid var(--gray-200)', borderLeft: '4px solid var(--azure)',
+              background: '#fff', overflow: 'hidden',
+            }}>
+              {/* ── INFERENCE ── */}
+              <div style={{ padding: '16px 18px', borderBottom: '1px solid var(--gray-100)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+                  <div style={{ fontSize: '0.6rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--azure)' }}>Inference</div>
+                  {ins.channels?.map((ch, ci) => {
+                    const cc = CHANNEL[ch] || { bg: 'var(--gray-100)', color: 'var(--gray-600)' };
+                    return <span key={ci} style={{ padding: '1px 6px', borderRadius: 3, fontSize: '0.55rem', fontWeight: 700, background: cc.bg, color: cc.color, textTransform: 'uppercase' }}>{ch}</span>;
+                  })}
+                </div>
+                <div style={{ fontSize: '0.92rem', fontWeight: 700, color: 'var(--navy)', lineHeight: 1.4 }}>
+                  {ins.inference}
+                </div>
+              </div>
+
+              {/* ── EVIDENCE ── */}
+              <div style={{ padding: '12px 18px', background: 'var(--gray-50)', borderBottom: '1px solid var(--gray-100)' }}>
+                <div style={{ fontSize: '0.6rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--gray-400)', marginBottom: 6 }}>Evidence</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  {ins.evidence?.map((ev, ei) => (
+                    <div key={ei} style={{ display: 'flex', alignItems: 'flex-start', gap: 6, fontSize: '0.8rem', color: 'var(--gray-600)', lineHeight: 1.4 }}>
+                      <span style={{ flexShrink: 0, width: 5, height: 5, borderRadius: '50%', background: 'var(--gray-400)', marginTop: 6 }} />
+                      {ev}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* ── RECOMMENDED ACTIONS ── */}
+              <div style={{ padding: '14px 18px' }}>
+                <div style={{ fontSize: '0.6rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#059669', marginBottom: 8 }}>Recommended Actions</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {ins.actions?.map((action, ai) => {
+                    const oc = ownerColors[action.owner] || { bg: 'var(--gray-100)', color: 'var(--gray-600)' };
+                    return (
+                      <div key={ai} style={{
+                        display: 'flex', alignItems: 'flex-start', gap: 12,
+                        padding: '10px 14px', borderRadius: 6,
+                        border: '1px solid var(--gray-200)', background: '#fff',
+                      }}>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontSize: '0.84rem', fontWeight: 600, color: 'var(--navy)', lineHeight: 1.4, marginBottom: 4 }}>
+                            {action.task}
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                            <span style={{ padding: '2px 8px', borderRadius: 3, fontSize: '0.62rem', fontWeight: 700, background: oc.bg, color: oc.color }}>{action.owner}</span>
+                            {action.urgency && (
+                              <span style={{
+                                padding: '2px 8px', borderRadius: 3, fontSize: '0.62rem', fontWeight: 700,
+                                background: action.urgency === 'This week' ? '#FEE2E2' : action.urgency === 'This month' ? '#FEF3C7' : '#F3F4F6',
+                                color: action.urgency === 'This week' ? '#991B1B' : action.urgency === 'This month' ? '#92400E' : '#374151',
+                              }}>{action.urgency}</span>
+                            )}
+                          </div>
+                        </div>
+                        <button style={{
+                          padding: '6px 14px', borderRadius: 6, border: '1px solid var(--gray-200)',
+                          background: '#fff', color: 'var(--azure)', fontSize: '0.72rem', fontWeight: 700,
+                          cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
+                        }}
+                          onMouseEnter={e => { e.currentTarget.style.background = 'var(--azure)'; e.currentTarget.style.color = '#fff'; e.currentTarget.style.borderColor = 'var(--azure)'; }}
+                          onMouseLeave={e => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.color = 'var(--azure)'; e.currentTarget.style.borderColor = 'var(--gray-200)'; }}
+                        >
+                          Launch →
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -318,9 +379,9 @@ export default function MarketingOverview({ data, meta }) {
   return (
     <div>
       <MarketingScorecard competitors={data?.scorecard} logoMap={logoMap} />
+      <CrossChannelInsights insights={data?.cross_channel_insights} />
       <ChannelComparison channels={data?.channels} />
       <ConsolidatedGaps gaps={data?.gaps} />
-      <CrossChannelInsights insights={data?.cross_channel_insights} />
     </div>
   );
 }

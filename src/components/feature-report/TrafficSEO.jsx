@@ -732,8 +732,13 @@ export default function TrafficSEO({ data, meta }) {
 
   return (
     <div>
-      {/* ── TRAFFIC ── */}
+      {/* ── SCORECARD ── */}
       <Scorecard data={data?.scorecard} />
+
+      {/* ── INSIGHTS ── */}
+      <StrategicInsights insights={data?.strategic_insights} />
+
+      {/* ── TRAFFIC ── */}
       <SectionDivider
         icon={<BarChart3 size={18} />}
         title="Traffic"
@@ -753,8 +758,6 @@ export default function TrafficSEO({ data, meta }) {
       <KeywordRankings keywords={data?.keyword_rankings} logoMap={logoMap} />
       <KeywordGaps gaps={data?.keyword_gaps} logoMap={logoMap} />
 
-      {/* ── INSIGHTS ── */}
-      <StrategicInsights insights={data?.strategic_insights} />
     </div>
   );
 }

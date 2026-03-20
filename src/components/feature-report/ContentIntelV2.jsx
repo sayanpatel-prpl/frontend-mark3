@@ -855,10 +855,13 @@ export default function ContentIntelV2({ data, meta }) {
         ))}
       </div>
 
+      {/* Scorecard + Insights — always visible above tabs */}
+      <Scorecard data={data.scorecard} />
+      <StrategicInsights insights={data.strategic_insights} />
+
       {/* Tab 1: Overview & Activity */}
       {activeTab === 'overview' && (
         <>
-          <Scorecard data={data.scorecard} />
           <ContentInventory inventory={data.content_inventory} logoMap={logoMap} />
           <ContentMixComparison competitors={data.publishing_cadence} inventory={data.content_inventory} logoMap={logoMap} />
           <PublishingCadence competitors={data.publishing_cadence} logoMap={logoMap} />
@@ -872,7 +875,6 @@ export default function ContentIntelV2({ data, meta }) {
           <ThemeClusters clusters={data.theme_clusters} logoMap={logoMap} />
           <ContentGaps gaps={data.content_gaps} logoMap={logoMap} />
           <KeywordLandscape keywords={data.keyword_landscape} logoMap={logoMap} />
-          <StrategicInsights insights={data.strategic_insights} />
         </>
       )}
     </div>

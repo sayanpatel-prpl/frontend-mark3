@@ -747,9 +747,12 @@ export default function AEOIntel({ data, meta }) {
         ))}
       </div>
 
+      {/* Scorecard + Recommendations — always visible above tabs */}
+      <Scorecard data={data.scorecard} />
+      <Recommendations insights={data.recommendations} />
+
       {activeTab === 'overview' && (
         <>
-          <Scorecard data={data.scorecard} />
           <PlatformBreakdown platforms={data.platforms} />
           <ShareOfVoice competitors={data.share_of_voice} logoMap={logoMap} />
           <VisibilityTrend trend={data.visibility_trend} />
@@ -761,7 +764,6 @@ export default function AEOIntel({ data, meta }) {
           <QueryTracker queries={data.queries} engines={data.tracked_engines} />
           <TopCitedPages pages={data.top_cited_pages} logoMap={logoMap} />
           <VisibilityGaps gaps={data.visibility_gaps} logoMap={logoMap} />
-          <Recommendations insights={data.recommendations} />
         </>
       )}
     </div>
