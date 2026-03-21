@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { TrendingUp, TrendingDown, Minus, ExternalLink, Lightbulb, AlertTriangle, BarChart3, FileText, Video, BookOpen, Mic, FileSpreadsheet, Newspaper, ChevronDown, ChevronUp, ArrowUpRight, Target, Layers, Search, Globe, Database } from 'lucide-react';
 import CompanyLogo from './CompanyLogo';
+import WhatToDoNext from './WhatToDoNext';
 
 /* ─── helpers ─── */
 const fmt = (n) => (n >= 1000 ? `${(n / 1000).toFixed(1)}k` : String(n));
@@ -688,130 +689,6 @@ function KeywordLandscape({ keywords, logoMap }) {
 
 
 /* ═══════════════════════════════════════════════════════════════
-   AI STRATEGIC INSIGHTS — compact, expandable
-   ═══════════════════════════════════════════════════════════════ */
-function StrategicInsights({ insights }) {
-  const [expandedIdx, setExpandedIdx] = useState({});
-
-  if (!insights || insights.length === 0) return null;
-
-  const priorityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
-  const sorted = [...insights].sort((a, b) => (priorityOrder[a.priority] ?? 9) - (priorityOrder[b.priority] ?? 9));
-  const highPriority = sorted.filter(i => i.priority === 'critical' || i.priority === 'high');
-  const otherPriority = sorted.filter(i => i.priority !== 'critical' && i.priority !== 'high');
-
-  const sevColors = {
-    critical: { border: '#DC2626', text: '#991B1B', badge: '#DC2626' },
-    high: { border: '#D97706', text: '#92400E', badge: '#D97706' },
-    medium: { border: '#2563EB', text: '#1E40AF', badge: '#2563EB' },
-    low: { border: '#9CA3AF', text: '#374151', badge: '#9CA3AF' },
-  };
-
-  const catStyle = (cat) => ({
-    padding: '2px 8px', borderRadius: 3, fontSize: '0.6rem', fontWeight: 700,
-    background: cat === 'content' ? '#DBEAFE' : cat === 'seo' ? '#F3E8FF' : '#D1FAE5',
-    color: cat === 'content' ? '#1E40AF' : cat === 'seo' ? '#6B21A8' : '#065F46',
-    textTransform: 'uppercase', letterSpacing: '0.04em',
-  });
-
-  return (
-    <div className="card" style={{ padding: 24, marginBottom: 24 }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-        <h3 className="section-title" style={{ margin: 0 }}>What To Do Next</h3>
-        <div style={{ display: 'flex', gap: 6 }}>
-          <span style={{ padding: '3px 10px', borderRadius: 4, fontSize: '0.68rem', fontWeight: 700, background: '#FEE2E2', color: '#991B1B', border: '1px solid #FECACA' }}>
-            {highPriority.length} Priority
-          </span>
-          {otherPriority.length > 0 && (
-            <span style={{ padding: '3px 10px', borderRadius: 4, fontSize: '0.68rem', fontWeight: 700, background: 'var(--gray-100)', color: 'var(--gray-500)', border: '1px solid var(--gray-200)' }}>
-              {otherPriority.length} Also Consider
-            </span>
-          )}
-        </div>
-      </div>
-      <p style={{ color: 'var(--gray-500)', fontSize: '0.82rem', marginBottom: 20 }}>
-        Actionable recommendations based on competitive content analysis
-      </p>
-
-      {highPriority.length > 0 && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: otherPriority.length > 0 ? 24 : 0 }}>
-          {highPriority.map((ins, i) => {
-            const isOpen = expandedIdx[`h${i}`];
-            const sc = sevColors[ins.priority] || sevColors.high;
-            return (
-              <div key={`h${i}`} style={{
-                borderRadius: 8, border: '1px solid var(--gray-200)', borderLeft: `4px solid ${sc.border}`,
-                background: '#fff', padding: '16px 18px',
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-                  <div style={{
-                    minWidth: 24, height: 24, borderRadius: '50%',
-                    background: sc.badge, color: '#fff',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: '0.72rem', fontWeight: 800, flexShrink: 0,
-                  }}>{i + 1}</div>
-                  <span style={{ padding: '2px 8px', borderRadius: 3, fontSize: '0.6rem', fontWeight: 700, background: sc.badge, color: '#fff', textTransform: 'uppercase' }}>{ins.priority}</span>
-                  {ins.category && <span style={catStyle(ins.category)}>{ins.category}</span>}
-                  <span style={{ fontSize: '0.7rem', fontWeight: 600, color: sc.text, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{ins.type}</span>
-                </div>
-                <div style={{ fontSize: '0.9rem', fontWeight: 700, color: sc.text, lineHeight: 1.4, marginBottom: 8 }}>{ins.action}</div>
-                <div style={{ fontSize: '0.8rem', color: sc.text, opacity: 0.85, lineHeight: 1.5 }}>{ins.observation}</div>
-                <div onClick={() => setExpandedIdx(prev => ({ ...prev, [`h${i}`]: !prev[`h${i}`] }))}
-                  style={{ marginTop: 8, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: '0.72rem', fontWeight: 600, color: sc.text, opacity: 0.7 }}>
-                  {isOpen ? 'Hide impact analysis' : 'Show impact analysis'}
-                  {isOpen ? <TrendingUp size={11} /> : <TrendingDown size={11} />}
-                </div>
-                {isOpen && (
-                  <div style={{ marginTop: 6, padding: '10px 14px', borderRadius: 6, background: 'var(--gray-50)', border: '1px solid var(--gray-200)', fontSize: '0.78rem', color: sc.text, lineHeight: 1.5 }}>
-                    {ins.implication}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {otherPriority.length > 0 && (
-        <>
-          <div style={{ fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--gray-400)', marginBottom: 10, paddingTop: 4, borderTop: '1px solid var(--gray-200)' }}>
-            Also Consider
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {otherPriority.map((ins, i) => {
-              const isOpen = expandedIdx[`o${i}`];
-              return (
-                <div key={`o${i}`} style={{ display: 'flex', gap: 14, padding: '14px 16px', borderRadius: 8, border: '1px solid var(--gray-200)', background: 'var(--gray-50)', alignItems: 'flex-start' }}>
-                  <div style={{ minWidth: 80, paddingTop: 2 }}>
-                    {ins.category && <div style={{ marginBottom: 4 }}><span style={catStyle(ins.category)}>{ins.category}</span></div>}
-                    <div style={{ fontSize: '0.68rem', fontWeight: 600, color: 'var(--gray-400)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{ins.type}</div>
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: '0.84rem', fontWeight: 600, color: 'var(--navy)', lineHeight: 1.4 }}>{ins.action}</div>
-                    <div onClick={() => setExpandedIdx(prev => ({ ...prev, [`o${i}`]: !prev[`o${i}`] }))}
-                      style={{ marginTop: 6, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: '0.7rem', fontWeight: 600, color: 'var(--azure)' }}>
-                      {isOpen ? 'Less' : 'Why this matters'}
-                      {isOpen ? <TrendingUp size={10} /> : <TrendingDown size={10} />}
-                    </div>
-                    {isOpen && (
-                      <div style={{ marginTop: 6, fontSize: '0.78rem', color: 'var(--gray-600)', lineHeight: 1.5 }}>
-                        <div style={{ marginBottom: 4 }}>{ins.observation}</div>
-                        <div style={{ fontStyle: 'italic', color: 'var(--gray-500)' }}>{ins.implication}</div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </>
-      )}
-    </div>
-  );
-}
-
-
-/* ═══════════════════════════════════════════════════════════════
    MAIN COMPONENT — V2 with sub-tabs
    Tab 1: Overview (descriptive — what's happening)
    Tab 2: Topics & Strategy (prescriptive — what to do)
@@ -857,7 +734,7 @@ export default function ContentIntelV2({ data, meta }) {
 
       {/* Scorecard + Insights — always visible above tabs */}
       <Scorecard data={data.scorecard} />
-      <StrategicInsights insights={data.strategic_insights} />
+      <WhatToDoNext insights={data.strategic_insights} subtitle="Actionable recommendations based on competitive content analysis" />
 
       {/* Tab 1: Overview & Activity */}
       {activeTab === 'overview' && (

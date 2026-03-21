@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import CompanyLogo from './CompanyLogo';
+import WhatToDoNext from './WhatToDoNext';
 
 /* ─── Row-aligned table: each row = message #N across all companies ─── */
 function AlignedSection({ title, subtitle, companies, logoMap, getItems, renderItem, emptyLabel }) {
@@ -150,82 +151,11 @@ export default function MessagingPlaybook({ data, meta }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
 
-      {/* ── WHAT TO DO NEXT — table format, same as other tabs ── */}
+      {/* ── WHAT TO DO NEXT — shared component ── */}
       {hasCounter && (() => {
         const mainName = (meta?.main_company?.name || '').toLowerCase();
         const competitors = data.filter(comp => comp.company.toLowerCase() !== mainName);
-        // Flatten all counter-points into rows for a clean table
-        const rows = [];
-        competitors.forEach(comp => {
-          const points = comp.counter_points || (comp.counter_strategy ? [comp.counter_strategy] : []);
-          points.forEach((p, pi) => {
-            const raw = typeof p === 'string' ? p : p.point || p;
-            let point = raw;
-            let evidence = typeof p === 'object' ? p.evidence : null;
-            if (!evidence && typeof raw === 'string' && raw.includes(' — ')) {
-              const parts = raw.split(' — ');
-              point = parts[0];
-              evidence = parts.slice(1).join(' — ');
-            }
-            rows.push({ company: comp.company, point, evidence, isFirst: pi === 0, total: points.length });
-          });
-        });
-        if (rows.length === 0) return null;
-
-        return (
-          <div className="card" style={{ padding: 20, marginBottom: 14 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-              <h3 className="section-title" style={{ margin: 0 }}>What To Do Next</h3>
-              <span style={{ padding: '3px 10px', borderRadius: 4, fontSize: '0.68rem', fontWeight: 700, background: '#FEE2E2', color: '#991B1B', border: '1px solid #FECACA' }}>
-                {rows.length} actions
-              </span>
-            </div>
-            <p style={{ color: 'var(--gray-500)', fontSize: '0.78rem', marginBottom: 16 }}>How to position against each competitor — use in deals, battle cards, and sales calls</p>
-
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.82rem' }}>
-                <thead>
-                  <tr style={{ borderBottom: '2px solid var(--gray-200)' }}>
-                    <th style={{ textAlign: 'left', padding: '10px 12px', color: 'var(--gray-500)', fontWeight: 600, fontSize: '0.72rem', textTransform: 'uppercase', width: 130 }}>Against</th>
-                    <th style={{ textAlign: 'left', padding: '10px 12px', color: 'var(--gray-500)', fontWeight: 600, fontSize: '0.72rem', textTransform: 'uppercase' }}>Action</th>
-                    <th style={{ textAlign: 'left', padding: '10px 12px', color: 'var(--gray-500)', fontWeight: 600, fontSize: '0.72rem', textTransform: 'uppercase', width: '30%' }}>Why</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rows.map((row, i) => (
-                    <tr key={i} style={{
-                      borderBottom: '1px solid var(--gray-100)',
-                      borderTop: row.isFirst && i > 0 ? '2px solid var(--gray-200)' : 'none',
-                    }}>
-                      <td style={{ padding: '12px', verticalAlign: 'top' }}>
-                        {row.isFirst && (
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                            <CompanyLogo name={row.company} logoUrl={logoMap[row.company]} size={18} />
-                            <span style={{ fontWeight: 700, color: 'var(--navy)', fontSize: '0.82rem' }}>{row.company}</span>
-                          </div>
-                        )}
-                      </td>
-                      <td style={{ padding: '12px', verticalAlign: 'top' }}>
-                        <div style={{ fontSize: '0.84rem', fontWeight: 600, color: 'var(--navy)', lineHeight: 1.5 }}>
-                          {row.point}
-                        </div>
-                      </td>
-                      <td style={{ padding: '12px', verticalAlign: 'top' }}>
-                        {row.evidence ? (
-                          <div style={{ fontSize: '0.78rem', color: 'var(--gray-500)', lineHeight: 1.4, fontStyle: 'italic' }}>
-                            {row.evidence}
-                          </div>
-                        ) : (
-                          <span style={{ color: 'var(--gray-300)', fontSize: '0.78rem' }}>—</span>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        );
+        return <WhatToDoNext counterData={competitors} logoMap={logoMap} />;
       })()}
 
       {/* ── TAGLINE ── */}

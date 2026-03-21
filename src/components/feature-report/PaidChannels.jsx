@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { TrendingUp, TrendingDown, Minus, Search, ExternalLink, Lightbulb, ChevronDown, ChevronUp, ArrowUpRight, AlertTriangle, Target, MousePointer, Eye, Link } from 'lucide-react';
 import CompanyLogo from './CompanyLogo';
+import WhatToDoNext from './WhatToDoNext';
 
 /* ─── helpers ─── */
 const fmtNum = (n) => (n >= 1000 ? `${(n / 1000).toFixed(1)}k` : String(n));
@@ -510,73 +511,6 @@ function LandingPageMonitor({ pages, logoMap }) {
 
 
 /* ═══════════════════════════════════════════════════════════════
-   WHAT TO DO NEXT — consistent pattern
-   ═══════════════════════════════════════════════════════════════ */
-function Recommendations({ insights }) {
-  const [expandedIdx, setExpandedIdx] = useState({});
-
-  if (!insights || insights.length === 0) return null;
-
-  const priorityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
-  const sorted = [...insights].sort((a, b) => (priorityOrder[a.priority] ?? 9) - (priorityOrder[b.priority] ?? 9));
-
-  const priorityColors = {
-    critical: { bg: '#FEE2E2', color: '#991B1B', border: '#DC2626' },
-    high: { bg: '#FEF3C7', color: '#92400E', border: '#D97706' },
-    medium: { bg: '#DBEAFE', color: '#1E40AF', border: '#2563EB' },
-    low: { bg: '#F3F4F6', color: '#374151', border: '#9CA3AF' },
-  };
-
-  return (
-    <div className="card" style={{ padding: 24, marginBottom: 24 }}>
-      <h3 className="section-title" style={{ marginBottom: 4 }}>What To Do Next</h3>
-      <p style={{ color: 'var(--gray-500)', fontSize: '0.82rem', marginBottom: 16 }}>Actionable recommendations based on competitive paid channel data</p>
-
-      <div style={{ overflowX: 'auto' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.82rem' }}>
-          <thead>
-            <tr style={{ borderBottom: '2px solid var(--gray-200)' }}>
-              <th style={{ textAlign: 'center', padding: '10px 8px', color: 'var(--gray-500)', fontWeight: 600, fontSize: '0.72rem', textTransform: 'uppercase', width: 70 }}>Priority</th>
-              <th style={{ textAlign: 'left', padding: '10px 12px', color: 'var(--gray-500)', fontWeight: 600, fontSize: '0.72rem', textTransform: 'uppercase', width: 100 }}>Type</th>
-              <th style={{ textAlign: 'left', padding: '10px 12px', color: 'var(--gray-500)', fontWeight: 600, fontSize: '0.72rem', textTransform: 'uppercase' }}>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {sorted.map((ins, i) => {
-              const isOpen = expandedIdx[i];
-              const pc = priorityColors[ins.priority] || priorityColors.medium;
-              return (
-                <tr key={i}
-                  onClick={() => setExpandedIdx(prev => ({ ...prev, [i]: !prev[i] }))}
-                  style={{ borderBottom: '1px solid var(--gray-100)', cursor: 'pointer', borderLeft: `3px solid ${pc.border}` }}
-                >
-                  <td style={{ textAlign: 'center', padding: '12px 8px', verticalAlign: 'top' }}>
-                    <span style={{ padding: '2px 8px', borderRadius: 3, fontSize: '0.65rem', fontWeight: 700, background: pc.bg, color: pc.color, border: `1px solid ${pc.border}`, textTransform: 'uppercase' }}>{ins.priority}</span>
-                  </td>
-                  <td style={{ padding: '12px', verticalAlign: 'top' }}>
-                    <div style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--gray-500)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{ins.type}</div>
-                  </td>
-                  <td style={{ padding: '12px', verticalAlign: 'top' }}>
-                    <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--navy)', lineHeight: 1.4 }}>{ins.action}</div>
-                    {isOpen && (
-                      <div style={{ marginTop: 8, padding: '10px 14px', borderRadius: 6, background: 'var(--gray-50)', border: '1px solid var(--gray-200)' }}>
-                        <div style={{ fontSize: '0.78rem', color: 'var(--gray-600)', lineHeight: 1.5, marginBottom: 6 }}>{ins.observation}</div>
-                        {ins.implication && <div style={{ fontSize: '0.75rem', color: 'var(--gray-500)', lineHeight: 1.4, fontStyle: 'italic' }}>{ins.implication}</div>}
-                      </div>
-                    )}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-}
-
-
-/* ═══════════════════════════════════════════════════════════════
    PAID ACTIVITY OVERVIEW — snapshot: how many ads per competitor per channel
    ═══════════════════════════════════════════════════════════════ */
 function PaidActivityOverview({ activity, logoMap }) {
@@ -769,7 +703,7 @@ export default function PaidChannels({ data, meta }) {
 
       {/* Scorecard + Recommendations — always visible above tabs */}
       <Scorecard data={data.scorecard} />
-      <Recommendations insights={data.recommendations} />
+      <WhatToDoNext insights={data.recommendations} subtitle="Actionable recommendations based on competitive paid channel data" />
 
       {activeTab === 'overview' && (
         <>
