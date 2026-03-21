@@ -17,6 +17,7 @@ import CustomerRecognitionPage from './pages/CustomerRecognitionPage';
 import FAQIntelligencePage from './pages/FAQIntelligencePage';
 import NewsMomentumPage from './pages/NewsMomentumPage';
 import MessagingPlaybookPage from './pages/MessagingPlaybookPage';
+import SocialListeningPage from './pages/SocialListeningPage';
 import TenantSelector from './components/TenantSelector';
 import SortableSidebar from './components/SortableSidebar';
 import {
@@ -168,7 +169,7 @@ function getPrimarySections(tenantConfig = {}) {
       items: [
         { key: '/news-momentum', icon: <Newspaper size={16} />, label: 'News & Momentum' },
         { key: '/social-proof', icon: <Award size={16} />, label: 'Customer Recognition' },
-        { key: '/social-listening', icon: <Globe size={16} />, label: 'Social Listening', preview: true },
+        { key: '/social-listening', icon: <Globe size={16} />, label: 'Social Listening' },
         { key: '/partnerships', icon: <Plug size={16} />, label: 'Partnerships', preview: true },
         { key: '/hiring-intel', icon: <Users size={16} />, label: 'Hiring Intel', preview: true },
         { key: '/org-structure', icon: <Building2 size={16} />, label: 'Org Structure', preview: true },
@@ -638,7 +639,7 @@ function App() {
           <Route path="/review-breakdown" element={<ReviewBreakdownPreview />} />
           <Route path="/sentiment-trends" element={<SentimentTrendsPreview />} />
           <Route path="/review-heatmaps" element={<ReviewHeatmapsPreview />} />
-          <Route path="/social-listening" element={<SocialListeningPreview />} />
+          <Route path="/social-listening" element={<SocialListeningPage />} />
           <Route path="/partnerships" element={<PartnershipsPreview />} />
           <Route path="/hiring-intel" element={<HiringIntelPreview />} />
           <Route path="/org-structure" element={<OrgStructurePreview />} />
