@@ -69,17 +69,17 @@ export default function WhatToDoNext({ insights, counterData, logoMap, subtitle 
                         )}
                       </div>
                       {isOpen && (ins.observation || ins.implication) && (
-                        <div style={{ marginTop: 10, padding: '12px 14px', borderRadius: 6, background: 'var(--gray-50)', border: '1px solid var(--gray-200)' }}>
+                        <div style={{ marginTop: 8 }}>
                           {ins.observation && (
-                            <div style={{ marginBottom: ins.implication ? 8 : 0 }}>
-                              <div style={{ fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--gray-400)', marginBottom: 3 }}>What we found</div>
-                              <div style={{ fontSize: '0.78rem', color: 'var(--gray-600)', lineHeight: 1.5 }}>{ins.observation}</div>
+                            <div style={{ display: 'flex', gap: 8, marginBottom: ins.implication ? 6 : 0, fontSize: '0.8rem', lineHeight: 1.5 }}>
+                              <span style={{ fontWeight: 700, color: 'var(--navy)', whiteSpace: 'nowrap', flexShrink: 0 }}>Finding:</span>
+                              <span style={{ color: 'var(--gray-600)' }}>{ins.observation}</span>
                             </div>
                           )}
                           {ins.implication && (
-                            <div>
-                              <div style={{ fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--gray-400)', marginBottom: 3 }}>Why it matters</div>
-                              <div style={{ fontSize: '0.78rem', color: 'var(--gray-600)', lineHeight: 1.5 }}>{ins.implication}</div>
+                            <div style={{ display: 'flex', gap: 8, fontSize: '0.8rem', lineHeight: 1.5 }}>
+                              <span style={{ fontWeight: 700, color: 'var(--navy)', whiteSpace: 'nowrap', flexShrink: 0 }}>Impact:</span>
+                              <span style={{ color: 'var(--gray-600)' }}>{ins.implication}</span>
                             </div>
                           )}
                         </div>
