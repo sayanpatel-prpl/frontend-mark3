@@ -515,8 +515,7 @@ function AppLayout({ user, activeTenantId, onTenantChange, onLogout, tenantConfi
 const INACTIVITY_TIMEOUT = 30 * 60 * 1000; // 30 minutes
 
 function App() {
-  // TODO: TEMP — bypass auth for local dev preview. Restore to null before pushing.
-  const [user, setUser] = useState({ id: 'dev', name: 'Dev User', email: 'dev@kompete.ai', tier: 'kompete' });
+  const [user, setUser] = useState(null);
   const [activeTenantId, setActiveTenantId] = useState(null);
   const [tenantConfig, setTenantConfig] = useState({});
   const [loading, setLoading] = useState(true);
