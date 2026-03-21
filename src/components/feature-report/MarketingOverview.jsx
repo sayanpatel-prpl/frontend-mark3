@@ -281,7 +281,7 @@ function CrossChannelInsights({ insights }) {
         Patterns spanning multiple channels — with launchable actions for your team
       </p>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         {insights.map((ins, i) => {
           const isOpen = expandedIdx[i];
 
@@ -290,75 +290,88 @@ function CrossChannelInsights({ insights }) {
               borderRadius: 8, border: '1px solid var(--gray-200)', borderLeft: '4px solid var(--azure)',
               background: '#fff', overflow: 'hidden',
             }}>
-              {/* ── INFERENCE ── */}
-              <div style={{ padding: '16px 18px', borderBottom: '1px solid var(--gray-100)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
-                  <div style={{ fontSize: '0.6rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--azure)' }}>Inference</div>
-                  {ins.channels?.map((ch, ci) => {
-                    const cc = CHANNEL[ch] || { bg: 'var(--gray-100)', color: 'var(--gray-600)' };
-                    return <span key={ci} style={{ padding: '1px 6px', borderRadius: 3, fontSize: '0.55rem', fontWeight: 700, background: cc.bg, color: cc.color, textTransform: 'uppercase' }}>{ch}</span>;
-                  })}
+              {/* ── INFERENCE (always visible, clickable) ── */}
+              <div
+                onClick={() => setExpandedIdx(prev => ({ ...prev, [i]: !prev[i] }))}
+                style={{ padding: '14px 18px', cursor: 'pointer', display: 'flex', alignItems: 'flex-start', gap: 10 }}
+              >
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                    {ins.channels?.map((ch, ci) => {
+                      const cc = CHANNEL[ch] || { bg: 'var(--gray-100)', color: 'var(--gray-600)' };
+                      return <span key={ci} style={{ padding: '1px 6px', borderRadius: 3, fontSize: '0.55rem', fontWeight: 700, background: cc.bg, color: cc.color, textTransform: 'uppercase' }}>{ch}</span>;
+                    })}
+                    {ins.actions?.length > 0 && (
+                      <span style={{ fontSize: '0.65rem', color: 'var(--gray-400)', marginLeft: 4 }}>{ins.actions.length} action{ins.actions.length !== 1 ? 's' : ''}</span>
+                    )}
+                  </div>
+                  <div style={{ fontSize: '0.88rem', fontWeight: 700, color: 'var(--navy)', lineHeight: 1.4 }}>
+                    {ins.inference}
+                  </div>
                 </div>
-                <div style={{ fontSize: '0.92rem', fontWeight: 700, color: 'var(--navy)', lineHeight: 1.4 }}>
-                  {ins.inference}
-                </div>
+                <span style={{ flexShrink: 0, color: 'var(--gray-400)', marginTop: 4 }}>
+                  {isOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                </span>
               </div>
 
-              {/* ── EVIDENCE ── */}
-              <div style={{ padding: '12px 18px', background: 'var(--gray-50)', borderBottom: '1px solid var(--gray-100)' }}>
-                <div style={{ fontSize: '0.6rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--gray-400)', marginBottom: 6 }}>Evidence</div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  {ins.evidence?.map((ev, ei) => (
-                    <div key={ei} style={{ display: 'flex', alignItems: 'flex-start', gap: 6, fontSize: '0.8rem', color: 'var(--gray-600)', lineHeight: 1.4 }}>
-                      <span style={{ flexShrink: 0, width: 5, height: 5, borderRadius: '50%', background: 'var(--gray-400)', marginTop: 6 }} />
-                      {ev}
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* ── RECOMMENDED ACTIONS ── */}
-              <div style={{ padding: '14px 18px' }}>
-                <div style={{ fontSize: '0.6rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#059669', marginBottom: 8 }}>Recommended Actions</div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {ins.actions?.map((action, ai) => {
-                    const oc = ownerColors[action.owner] || { bg: 'var(--gray-100)', color: 'var(--gray-600)' };
-                    return (
-                      <div key={ai} style={{
-                        display: 'flex', alignItems: 'flex-start', gap: 12,
-                        padding: '10px 14px', borderRadius: 6,
-                        border: '1px solid var(--gray-200)', background: '#fff',
-                      }}>
-                        <div style={{ flex: 1 }}>
-                          <div style={{ fontSize: '0.84rem', fontWeight: 600, color: 'var(--navy)', lineHeight: 1.4, marginBottom: 4 }}>
-                            {action.task}
-                          </div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                            <span style={{ padding: '2px 8px', borderRadius: 3, fontSize: '0.62rem', fontWeight: 700, background: oc.bg, color: oc.color }}>{action.owner}</span>
-                            {action.urgency && (
-                              <span style={{
-                                padding: '2px 8px', borderRadius: 3, fontSize: '0.62rem', fontWeight: 700,
-                                background: action.urgency === 'This week' ? '#FEE2E2' : action.urgency === 'This month' ? '#FEF3C7' : '#F3F4F6',
-                                color: action.urgency === 'This week' ? '#991B1B' : action.urgency === 'This month' ? '#92400E' : '#374151',
-                              }}>{action.urgency}</span>
-                            )}
-                          </div>
+              {/* ── EVIDENCE + ACTIONS (collapsible) ── */}
+              {isOpen && (
+                <>
+                  <div style={{ padding: '10px 18px', background: 'var(--gray-50)', borderTop: '1px solid var(--gray-100)', borderBottom: '1px solid var(--gray-100)' }}>
+                    <div style={{ fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--gray-400)', marginBottom: 6 }}>Evidence</div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                      {ins.evidence?.map((ev, ei) => (
+                        <div key={ei} style={{ display: 'flex', alignItems: 'flex-start', gap: 6, fontSize: '0.8rem', color: 'var(--gray-600)', lineHeight: 1.4 }}>
+                          <span style={{ flexShrink: 0, width: 4, height: 4, borderRadius: '50%', background: 'var(--gray-400)', marginTop: 7 }} />
+                          {ev}
                         </div>
-                        <button style={{
-                          padding: '6px 14px', borderRadius: 6, border: '1px solid var(--gray-200)',
-                          background: '#fff', color: 'var(--azure)', fontSize: '0.72rem', fontWeight: 700,
-                          cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
-                        }}
-                          onMouseEnter={e => { e.currentTarget.style.background = 'var(--azure)'; e.currentTarget.style.color = '#fff'; e.currentTarget.style.borderColor = 'var(--azure)'; }}
-                          onMouseLeave={e => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.color = 'var(--azure)'; e.currentTarget.style.borderColor = 'var(--gray-200)'; }}
-                        >
-                          Launch →
-                        </button>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div style={{ padding: '12px 18px' }}>
+                    <div style={{ fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#059669', marginBottom: 8 }}>Recommended Actions</div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      {ins.actions?.map((action, ai) => {
+                        const oc = ownerColors[action.owner] || { bg: 'var(--gray-100)', color: 'var(--gray-600)' };
+                        return (
+                          <div key={ai} style={{
+                            display: 'flex', alignItems: 'flex-start', gap: 10,
+                            padding: '8px 12px', borderRadius: 6,
+                            border: '1px solid var(--gray-200)', background: '#fff',
+                          }}>
+                            <div style={{ flex: 1 }}>
+                              <div style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--navy)', lineHeight: 1.4, marginBottom: 4 }}>
+                                {action.task}
+                              </div>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                <span style={{ padding: '1px 6px', borderRadius: 3, fontSize: '0.6rem', fontWeight: 700, background: oc.bg, color: oc.color }}>{action.owner}</span>
+                                {action.urgency && (
+                                  <span style={{
+                                    padding: '1px 6px', borderRadius: 3, fontSize: '0.6rem', fontWeight: 700,
+                                    background: action.urgency === 'This week' ? '#FEE2E2' : '#FEF3C7',
+                                    color: action.urgency === 'This week' ? '#991B1B' : '#92400E',
+                                  }}>{action.urgency}</span>
+                                )}
+                              </div>
+                            </div>
+                            <button style={{
+                              padding: '5px 12px', borderRadius: 6, border: '1px solid var(--gray-200)',
+                              background: '#fff', color: 'var(--azure)', fontSize: '0.7rem', fontWeight: 700,
+                              cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
+                            }}
+                              onMouseEnter={e => { e.currentTarget.style.background = 'var(--azure)'; e.currentTarget.style.color = '#fff'; e.currentTarget.style.borderColor = 'var(--azure)'; }}
+                              onMouseLeave={e => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.color = 'var(--azure)'; e.currentTarget.style.borderColor = 'var(--gray-200)'; }}
+                            >
+                              Launch →
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           );
         })}

@@ -235,9 +235,9 @@ export default function MessagingPlaybook({ data, meta }) {
         renderItem={(p, comp, sourceOnly) => {
           const text = typeof p === 'string' ? p : p.text;
           const msg = typeof p === 'string' ? null : p.addressed_by;
-          if (sourceOnly) return msg ? <div style={{ fontSize: '0.68rem', color: 'var(--gray-400)', fontStyle: 'italic', marginTop: 2 }}>→ "{msg}"</div> : null;
+          if (sourceOnly) return msg ? <SourceRef src={`→ "${msg}"`} /> : null;
           return (
-            <div style={{ fontSize: '0.82rem', color: 'var(--gray-700)', lineHeight: 1.4 }}>
+            <div style={{ fontSize: '0.82rem', color: 'var(--gray-700)', lineHeight: 1.5 }}>
               <ClaimText text={text} />
             </div>
           );
