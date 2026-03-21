@@ -378,12 +378,34 @@ export default function MessagingPlaybookPage() {
         </div>
       </div>
 
-      {/* What To Do Next — always visible above tabs */}
+      {/* What To Do Next — always visible above tabs, same format as all other tabs */}
       {(() => {
         const mainName = (displayMeta?.main_company?.name || '').toLowerCase();
-        const counterCompetitors = displayData.filter(comp => comp.company.toLowerCase() !== mainName && (comp.counter_points?.length > 0 || comp.counter_strategy));
-        if (counterCompetitors.length === 0) return null;
-        return <WhatToDoNext counterData={counterCompetitors} logoMap={logoMap} />;
+        const competitors = displayData.filter(comp => comp.company.toLowerCase() !== mainName);
+        // Convert counter_points into standard insights format
+        const insights = [];
+        competitors.forEach(comp => {
+          const points = comp.counter_points || (comp.counter_strategy ? [comp.counter_strategy] : []);
+          points.forEach(p => {
+            const raw = typeof p === 'string' ? p : p.point || p;
+            let point = raw;
+            let evidence = typeof p === 'object' ? p.evidence : null;
+            if (!evidence && typeof raw === 'string' && raw.includes(' — ')) {
+              const parts = raw.split(' — ');
+              point = parts[0];
+              evidence = parts.slice(1).join(' — ');
+            }
+            insights.push({
+              priority: 'high',
+              type: `vs ${comp.company}`,
+              action: point,
+              observation: evidence || null,
+              implication: null,
+            });
+          });
+        });
+        if (insights.length === 0) return null;
+        return <WhatToDoNext insights={insights} subtitle="How to position against each competitor — use in deals, battle cards, and sales calls" />;
       })()}
 
       {/* Sub-tabs */}
