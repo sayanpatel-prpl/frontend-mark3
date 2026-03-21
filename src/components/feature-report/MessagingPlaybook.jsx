@@ -151,13 +151,6 @@ export default function MessagingPlaybook({ data, meta }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
 
-      {/* ── WHAT TO DO NEXT — shared component ── */}
-      {hasCounter && (() => {
-        const mainName = (meta?.main_company?.name || '').toLowerCase();
-        const competitors = data.filter(comp => comp.company.toLowerCase() !== mainName);
-        return <WhatToDoNext counterData={competitors} logoMap={logoMap} />;
-      })()}
-
       {/* ── TAGLINE ── */}
       <SingleRowSection title="Tagline" subtitle="Exact homepage headline"
         companies={data} logoMap={logoMap}

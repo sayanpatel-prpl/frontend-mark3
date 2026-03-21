@@ -6,6 +6,7 @@ import MessagingPlaybook from '../components/feature-report/MessagingPlaybook';
 import Spinner from '../components/report/ui/Spinner';
 import CompanyLogo from '../components/feature-report/CompanyLogo';
 import { RefreshCw, PenTool, TrendingUp, GitCompare, ArrowRight } from 'lucide-react';
+import WhatToDoNext from '../components/feature-report/WhatToDoNext';
 
 /* ─── Sample data — exact website copy from HighRadius competitors ─── */
 const SAMPLE_PLAYBOOK = [
@@ -376,6 +377,14 @@ export default function MessagingPlaybookPage() {
           )}
         </div>
       </div>
+
+      {/* What To Do Next — always visible above tabs */}
+      {(() => {
+        const mainName = (displayMeta?.main_company?.name || '').toLowerCase();
+        const counterCompetitors = displayData.filter(comp => comp.company.toLowerCase() !== mainName && (comp.counter_points?.length > 0 || comp.counter_strategy));
+        if (counterCompetitors.length === 0) return null;
+        return <WhatToDoNext counterData={counterCompetitors} logoMap={logoMap} />;
+      })()}
 
       {/* Sub-tabs */}
       <div style={{
