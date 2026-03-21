@@ -7,7 +7,6 @@ export default function ComingSoonPreview({ title, description, icon, children }
   return (
     <div className="report-root">
       <div className="report-container">
-        {/* Sample data banner */}
         <div className="preview-banner">
           <AlertTriangle size={16} style={{ color: '#C9A84C', flexShrink: 0 }} />
           <span className="preview-banner-label">Sample Preview</span>
