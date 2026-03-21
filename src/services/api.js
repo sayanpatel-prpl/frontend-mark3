@@ -130,6 +130,19 @@ export const intelApi = {
   opportunities: (filters) => request(`/intel/opportunities${filters ? '?' + new URLSearchParams(filters) : ''}`),
 };
 
+export const socialListeningApi = {
+  getConfig: () => request(tenantPath('/social-listening/config')),
+  upsertConfig: (data) => request(tenantPath('/social-listening/config'), { method: 'POST', body: JSON.stringify(data) }),
+  getPosts: (filters) => request(tenantPath(`/social-listening/posts${filters ? '?' + new URLSearchParams(filters) : ''}`)),
+  getMetrics: (filters) => request(tenantPath(`/social-listening/metrics${filters ? '?' + new URLSearchParams(filters) : ''}`)),
+  getFrequency: (filters) => request(tenantPath(`/social-listening/frequency${filters ? '?' + new URLSearchParams(filters) : ''}`)),
+  getOverview: () => request(tenantPath('/social-listening/overview')),
+  triggerCollection: (companyId) => request(tenantPath('/social-listening/collect'), { method: 'POST', body: JSON.stringify({ company_id: companyId }) }),
+  getCollectionStatus: () => request(tenantPath('/social-listening/collection-status')),
+  getInsights: () => request(tenantPath('/social-listening/insights')),
+  triggerAnalysis: () => request(tenantPath('/social-listening/analyze'), { method: 'POST' }),
+};
+
 export const reportApi = {
   generate: (projectId, refresh = false) =>
     request(tenantPath(`/projects/${projectId}/report/generate${refresh ? '?refresh=true' : ''}`), { method: 'POST' }),

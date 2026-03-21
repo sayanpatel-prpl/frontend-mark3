@@ -1,7 +1,10 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { Table, Button, Modal, Form, Input, Switch, Tag, Space, message, theme } from 'antd';
-import { Plus, RefreshCw } from 'lucide-react';
-import { companyApi } from '../services/api';
+import { Plus, RefreshCw, GripVertical } from 'lucide-react';
+import { companyApi, socialListeningApi } from '../services/api';
+import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { SortableContext, horizontalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 const statusTag = (status) => {
   if (!status || status === 'none') return <Tag>-</Tag>;
@@ -12,6 +15,27 @@ const statusTag = (status) => {
   return <Tag color={map[status] || 'default'}>{status}</Tag>;
 };
 
+// Draggable column keys (order matters — these can be reordered)
+const DRAGGABLE_KEYS = ['website', 'linkedin', 'G2', 'Gartner', 'Trustpilot', 'Capterra', 'website_scrape', 'total', 'summaries', 'social'];
+
+function DraggableHeaderCell({ id, children, ...restProps }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+  const style = {
+    ...restProps.style,
+    transform: CSS.Translate.toString(transform),
+    transition,
+    cursor: 'grab',
+    opacity: isDragging ? 0.5 : 1,
+    position: isDragging ? 'relative' : undefined,
+    zIndex: isDragging ? 999 : undefined,
+  };
+  return (
+    <th {...restProps} ref={setNodeRef} style={style} {...attributes} {...listeners}>
+      {children}
+    </th>
+  );
+}
+
 export default function Companies() {
   const { token } = theme.useToken();
   const [companies, setCompanies] = useState([]);
@@ -21,10 +45,86 @@ export default function Companies() {
   const [editingCompany, setEditingCompany] = useState(null);
   const [summaryProgress, setSummaryProgress] = useState({});
   const [websiteScrapeProgress, setWebsiteScrapeProgress] = useState({});
+  const [socialStatus, setSocialStatus] = useState({});
+  const [columnOrder, setColumnOrder] = useState(DRAGGABLE_KEYS);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
+  );
+
+  const handleDragEnd = (event) => {
+    const { active, over } = event;
+    if (active && over && active.id !== over.id) {
+      setColumnOrder(prev => {
+        const oldIndex = prev.indexOf(active.id);
+        const newIndex = prev.indexOf(over.id);
+        return arrayMove(prev, oldIndex, newIndex);
+      });
+    }
+  };
   const [form] = Form.useForm();
   const pollRef = useRef(null);
   const summaryPollRef = useRef(null);
   const websitePollRef = useRef(null);
+
+  const handleCollect = async (company) => {
+    // Check if social config exists first
+    try {
+      const response = await socialListeningApi.getConfig();
+      const configs = response?.data || response || [];
+      const config = configs.find(c => c.company_id === company.id);
+      if (!config || (!config.twitter_handle && !config.linkedin_url && !config.reddit_search_query && !config.youtube_channel_url)) {
+        message.warning(`No social listening config for ${company.name}. Edit the company and add Twitter/LinkedIn/Reddit/YouTube first.`);
+        return;
+      }
+    } catch (_) {
+      message.warning(`No social listening config for ${company.name}. Edit the company and add handles first.`);
+      return;
+    }
+
+    setSocialStatus(prev => ({ ...prev, [company.id]: 'collecting' }));
+    try {
+      await socialListeningApi.triggerCollection(company.id);
+      // Poll collection status until done
+      const poll = setInterval(async () => {
+        try {
+          const statusData = await socialListeningApi.getCollectionStatus();
+          const runs = (statusData?.data || statusData || [])
+            .filter(r => r.company_id === company.id);
+          if (!runs.length) return;
+          // Check if any are still running
+          const stillRunning = runs.some(r => r.status === 'running');
+          if (!stillRunning) {
+            clearInterval(poll);
+            // Build per-platform summary from latest runs
+            const platformMap = {};
+            for (const r of runs) {
+              if (!platformMap[r.platform] || new Date(r.started_at) > new Date(platformMap[r.platform].started_at)) {
+                platformMap[r.platform] = r;
+              }
+            }
+            const result = {};
+            for (const [plat, r] of Object.entries(platformMap)) {
+              result[plat] = { status: r.status, posts_collected: r.posts_collected || 0 };
+            }
+            setSocialStatus(prev => ({ ...prev, [company.id]: result }));
+            message.success(`Social data collected for ${company.name}`);
+          }
+        } catch (_) { /* keep polling */ }
+      }, 3000);
+      // Safety timeout — stop polling after 5 minutes
+      setTimeout(() => {
+        clearInterval(poll);
+        setSocialStatus(prev => {
+          if (prev[company.id] === 'collecting') return { ...prev, [company.id]: undefined };
+          return prev;
+        });
+      }, 300000);
+    } catch (err) {
+      setSocialStatus(prev => ({ ...prev, [company.id]: undefined }));
+      message.error(err.message || 'Collection failed');
+    }
+  };
 
   const fetchCompanies = async () => {
     try {
@@ -37,7 +137,32 @@ export default function Companies() {
     }
   };
 
-  useEffect(() => { fetchCompanies(); }, [showInactive]);
+  const fetchSocialStatus = async () => {
+    try {
+      const statusData = await socialListeningApi.getCollectionStatus();
+      const runs = statusData?.data || statusData || [];
+      // Group by company, then by platform — keep latest run per platform
+      const byCompany = {};
+      for (const r of runs) {
+        if (!byCompany[r.company_id]) byCompany[r.company_id] = {};
+        const existing = byCompany[r.company_id][r.platform];
+        if (!existing || new Date(r.started_at) > new Date(existing.started_at)) {
+          byCompany[r.company_id][r.platform] = r;
+        }
+      }
+      const statusMap = {};
+      for (const [companyId, platforms] of Object.entries(byCompany)) {
+        const result = {};
+        for (const [plat, r] of Object.entries(platforms)) {
+          result[plat] = { status: r.status, posts_collected: r.posts_collected || 0 };
+        }
+        statusMap[companyId] = result;
+      }
+      setSocialStatus(statusMap);
+    } catch (_) { /* no social status yet */ }
+  };
+
+  useEffect(() => { fetchCompanies(); fetchSocialStatus(); }, [showInactive]);
 
   // Auto-poll while any company has in-progress status
   useEffect(() => {
@@ -110,11 +235,21 @@ export default function Companies() {
   const handleSubmit = async () => {
     try {
       const values = await form.validateFields();
+      const { twitter_handle, linkedin_url, reddit_search_query, youtube_channel_url, ...companyValues } = values;
+      const socialFields = { twitter_handle, linkedin_url, reddit_search_query, youtube_channel_url };
+      const hasSocial = Object.values(socialFields).some(v => v);
+
       if (editingCompany) {
-        await companyApi.update(editingCompany.id, values);
+        await companyApi.update(editingCompany.id, companyValues);
+        if (hasSocial) {
+          await socialListeningApi.upsertConfig({ company_id: editingCompany.id, ...socialFields });
+        }
         message.success('Company updated');
       } else {
-        await companyApi.create(values);
+        const created = await companyApi.create(companyValues);
+        if (hasSocial && created?.id) {
+          await socialListeningApi.upsertConfig({ company_id: created.id, ...socialFields });
+        }
         message.success('Company created');
       }
       setModalOpen(false);
@@ -126,7 +261,7 @@ export default function Companies() {
     }
   };
 
-  const handleEdit = (company) => {
+  const handleEdit = async (company) => {
     setEditingCompany(company);
     form.setFieldsValue({
       name: company.name || '',
@@ -137,6 +272,20 @@ export default function Companies() {
       product_website_url: company.product_website_url || '',
     });
     setModalOpen(true);
+    // Fetch social listening config and populate fields
+    try {
+      const response = await socialListeningApi.getConfig();
+      const configs = response?.data || response || [];
+      const socialConfig = configs.find(c => c.company_id === company.id);
+      if (socialConfig) {
+        form.setFieldsValue({
+          twitter_handle: socialConfig.twitter_handle || '',
+          linkedin_url: socialConfig.linkedin_url || '',
+          reddit_search_query: socialConfig.reddit_search_query || '',
+          youtube_channel_url: socialConfig.youtube_channel_url || '',
+        });
+      }
+    } catch (_) { /* social config not available yet */ }
   };
 
   const refreshAction = (fn, id) => async () => {
@@ -171,6 +320,7 @@ export default function Companies() {
 
   const columns = [
     { title: 'Name', dataIndex: 'name', key: 'name', fixed: 'left', width: 160 },
+    { title: 'Website', dataIndex: 'website', key: 'website', width: 200, ellipsis: true, render: (v) => v ? <span title={v}>{v}</span> : '-' },
     { title: 'Website', dataIndex: 'website', key: 'website', width: 200, ellipsis: true, render: (v) => v ? <span title={v}>{v}</span> : '-' },
     {
       title: 'LinkedIn', key: 'linkedin', width: 120,
@@ -274,6 +424,31 @@ export default function Companies() {
       },
     },
     {
+      title: 'Social', key: 'social', width: 180,
+      render: (_, c) => {
+        const status = socialStatus[c.id];
+        if (status === 'collecting') {
+          return <Tag color="orange">Collecting...</Tag>;
+        }
+        if (status && typeof status === 'object') {
+          // Show per-platform results
+          const platforms = Object.entries(status);
+          return (
+            <Space size={2} wrap>
+              {platforms.map(([plat, info]) => (
+                <Tag key={plat} color={info.status === 'success' ? 'green' : info.status === 'cached' ? 'blue' : 'red'} style={{ fontSize: 10 }}>
+                  {plat.slice(0, 2).toUpperCase()} {info.posts_collected ?? '✓'}
+                </Tag>
+              ))}
+              <Button size="small" type="link" icon={<RefreshCw size={12} />}
+                onClick={() => handleCollect(c)} />
+            </Space>
+          );
+        }
+        return <Button size="small" onClick={() => handleCollect(c)}>Collect</Button>;
+      },
+    },
+    {
       title: 'Status', dataIndex: 'is_active', key: 'status', width: 80,
       render: (active) => <Tag color={active ? 'green' : 'red'}>{active ? 'Active' : 'Inactive'}</Tag>,
     },
@@ -298,6 +473,26 @@ export default function Companies() {
     },
   ];
 
+  // Reorder columns based on drag state
+  const sortedColumns = useMemo(() => {
+    const fixed = columns.filter(c => c.key === 'name' || c.key === 'status' || c.key === 'actions');
+    const draggable = columns.filter(c => DRAGGABLE_KEYS.includes(c.key));
+    const colMap = {};
+    draggable.forEach(c => { colMap[c.key] = c; });
+    const ordered = columnOrder.map(key => colMap[key]).filter(Boolean);
+    // Add onHeaderCell to make draggable headers
+    const withDnd = ordered.map(col => ({
+      ...col,
+      onHeaderCell: () => ({ id: col.key }),
+    }));
+    return [
+      fixed.find(c => c.key === 'name'),
+      ...withDnd,
+      fixed.find(c => c.key === 'status'),
+      fixed.find(c => c.key === 'actions'),
+    ].filter(Boolean);
+  }, [columns, columnOrder]);
+
   return (
     <div style={{
       background: token.colorBgContainer,
@@ -316,16 +511,31 @@ export default function Companies() {
         </Space>
       </div>
 
-      <Table
-        columns={columns}
-        dataSource={companies}
-        rowKey="id"
-        loading={loading}
-        size="small"
-        pagination={false}
-        scroll={{ x: 1500 }}
-        rowClassName={(r) => !r.is_active ? 'ant-table-row-inactive' : ''}
-      />
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+        <SortableContext items={columnOrder} strategy={horizontalListSortingStrategy}>
+          <Table
+            columns={sortedColumns}
+            dataSource={companies}
+            rowKey="id"
+            loading={loading}
+            size="small"
+            pagination={false}
+            scroll={{ x: 1500 }}
+            rowClassName={(r) => !r.is_active ? 'ant-table-row-inactive' : ''}
+            components={{
+              header: {
+                cell: (props) => {
+                  const { id, children, ...rest } = props;
+                  if (id && DRAGGABLE_KEYS.includes(id)) {
+                    return <DraggableHeaderCell id={id} {...rest}>{children}</DraggableHeaderCell>;
+                  }
+                  return <th {...rest}>{children}</th>;
+                },
+              },
+            }}
+          />
+        </SortableContext>
+      </DndContext>
 
       <Modal
         title={editingCompany ? 'Edit Company' : 'Add Company'}
@@ -333,26 +543,50 @@ export default function Companies() {
         onOk={handleSubmit}
         onCancel={() => { setModalOpen(false); setEditingCompany(null); form.resetFields(); }}
         okText={editingCompany ? 'Update' : 'Create'}
+        width={720}
       >
-        <Form form={form} layout="vertical">
-          <Form.Item label="Name" name="name" rules={[{ required: true }]}>
-            <Input />
-          </Form.Item>
-          <Form.Item label="Website" name="website" rules={[{ required: true }]}>
-            <Input placeholder="https://example.com" />
-          </Form.Item>
-          <Form.Item label="Product Website URL" name="product_website_url">
-            <Input placeholder="https://www.example.com" />
-          </Form.Item>
-          <Form.Item label="G2 Reviews URL" name="g2_reviews_url">
-            <Input placeholder="https://www.g2.com/products/company-slug/reviews" />
-          </Form.Item>
-          <Form.Item label="Gartner Reviews URL" name="gartner_reviews_url">
-            <Input placeholder="https://www.gartner.com/reviews/market/.../vendor/.../product/..." />
-          </Form.Item>
-          <Form.Item label="Capterra Reviews URL" name="capterra_reviews_url">
-            <Input placeholder="https://www.capterra.com/p/.../reviews/" />
-          </Form.Item>
+        <Form form={form} layout="vertical" style={{ marginTop: 8 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 20px' }}>
+            {/* Left column — Company Info */}
+            <div>
+              <div style={{ fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', color: '#8c8c8c', marginBottom: 8 }}>Company Info</div>
+              <Form.Item label="Name" name="name" rules={[{ required: true }]} style={{ marginBottom: 12 }}>
+                <Input />
+              </Form.Item>
+              <Form.Item label="Website" name="website" rules={[{ required: true }]} style={{ marginBottom: 12 }}>
+                <Input placeholder="https://example.com" />
+              </Form.Item>
+              <Form.Item label="Product Website" name="product_website_url" style={{ marginBottom: 12 }}>
+                <Input placeholder="https://www.example.com" />
+              </Form.Item>
+              <Form.Item label="G2 URL" name="g2_reviews_url" style={{ marginBottom: 12 }}>
+                <Input placeholder="https://www.g2.com/products/.../reviews" />
+              </Form.Item>
+              <Form.Item label="Gartner URL" name="gartner_reviews_url" style={{ marginBottom: 12 }}>
+                <Input placeholder="https://www.gartner.com/reviews/..." />
+              </Form.Item>
+              <Form.Item label="Capterra URL" name="capterra_reviews_url" style={{ marginBottom: 12 }}>
+                <Input placeholder="https://www.capterra.com/p/.../reviews/" />
+              </Form.Item>
+            </div>
+
+            {/* Right column — Social Listening */}
+            <div>
+              <div style={{ fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', color: '#8c8c8c', marginBottom: 8 }}>Social Listening</div>
+              <Form.Item label="Twitter Handle" name="twitter_handle" style={{ marginBottom: 12 }}>
+                <Input placeholder="companyname (without @)" />
+              </Form.Item>
+              <Form.Item label="LinkedIn URL" name="linkedin_url" style={{ marginBottom: 12 }}>
+                <Input placeholder="https://www.linkedin.com/company/..." />
+              </Form.Item>
+              <Form.Item label="Reddit Search Query" name="reddit_search_query" style={{ marginBottom: 12 }}>
+                <Input placeholder="reddit companyname review" />
+              </Form.Item>
+              <Form.Item label="YouTube Channel" name="youtube_channel_url" style={{ marginBottom: 12 }}>
+                <Input placeholder="https://www.youtube.com/@companyname" />
+              </Form.Item>
+            </div>
+          </div>
         </Form>
       </Modal>
 
